@@ -1,0 +1,17 @@
+{
+  "author": "Hailer Oy",
+  "contributors": [
+    "John Hailero <john@magic.apps>"
+  ],
+  "config": {
+    "fields": {
+      "workflowId": {
+        "type": "string"
+      }
+    }
+  },
+  "description": "Customer dashboard — assets, support tickets, contacts and opportunities at a glance.",
+  "versionDescription": "Initial release",
+  "version": "1.0.0",
+  "appId": "6a147675cfcc9eb20cb6297e"
+}
