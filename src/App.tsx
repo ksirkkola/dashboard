@@ -133,7 +133,7 @@ export default function App() {
       {customerId ? (
         <>
           <CustomerHeader hailer={hailer} customerId={customerId} />
-          <Tabs variant="soft-rounded" colorScheme="blue">
+          <Tabs variant="soft-rounded" colorScheme="blue" isLazy>
             <TabList overflowX="auto" overflowY="hidden" sx={{ scrollbarWidth: 'none' }} pb={2}>
               <Tab><TabLabel label="Assets" count={assetCount} icon={CubeIcon} /></Tab>
               <Tab><TabLabel label="Support" count={ticketCount} icon={TicketIcon} /></Tab>

@@ -1,12 +1,38 @@
 import { Activity, HailerApi } from '@hailer/app-sdk';
 
+const LIST_PAGE_SIZE = 200;
+
+async function fetchAllInPhase(
+  hailer: HailerApi,
+  workflowId: string,
+  phaseId: string,
+): Promise<Activity[]> {
+  const all: Activity[] = [];
+  let skip = 0;
+  for (;;) {
+    let page: Activity[];
+    try {
+      page = await hailer.activity.list(workflowId, phaseId, {
+        limit: LIST_PAGE_SIZE,
+        skip,
+      });
+    } catch {
+      break;
+    }
+    all.push(...page);
+    if (page.length < LIST_PAGE_SIZE) break;
+    skip += LIST_PAGE_SIZE;
+  }
+  return all;
+}
+
 export async function fetchAllPhases(
   hailer: HailerApi,
   workflowId: string,
   phaseIds: string[],
 ): Promise<Activity[]> {
   const results = await Promise.all(
-    phaseIds.map((p) => hailer.activity.list(workflowId, p).catch(() => [] as Activity[])),
+    phaseIds.map((p) => fetchAllInPhase(hailer, workflowId, p)),
   );
   return results.flat();
 }

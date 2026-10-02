@@ -16,6 +16,8 @@ import { Contact_persons_FieldIds } from '../../../../workspace/enums';
 import { WORKFLOWS, PHASES } from '../config';
 import { fetchAllPhases, filterByLink } from '../hailer/api-helpers';
 import ClickableCard from './ClickableCard';
+import EmptyState from './EmptyState';
+import { UsersIcon } from './Icons';
 
 interface Props {
   hailer: HailerApi;
@@ -53,7 +55,7 @@ export default function ContactsList({ hailer, customerId, onCount }: Props) {
   if (loading) return <Center py={12}><Spinner /></Center>;
   if (error) return <Center py={12}><Text color="red.500">{error}</Text></Center>;
   if (contacts.length === 0)
-    return <Center py={12}><Text color="subtleText">No contacts.</Text></Center>;
+    return <EmptyState icon={UsersIcon} text="No contacts on file for this customer." />;
 
   return (
     <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>

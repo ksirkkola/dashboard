@@ -50,11 +50,11 @@ export default function AssetCard({ hailer, activity }: AssetCardProps) {
 
   const assetName = f[Assets_FieldIds.asset_name_8c8] as string | undefined;
   const productFamily = f[Assets_FieldIds.product_family_23a] as string | undefined;
-  const productName = f[Assets_FieldIds.product_name_544] as string | undefined;
+  const productName = f[Assets_FieldIds.description_f72] as string | undefined;
   const purchaseDateMs = f[Assets_FieldIds.purchase_date_e8b] as number | undefined;
   const warrantyExpiresMs = f[Assets_FieldIds.warranty_expires_c05] as number | undefined;
   const calibrationDueMs = f[Assets_FieldIds.calibration_due_f5e] as number | undefined;
-  const assetAge = f[Assets_FieldIds.asset_age_a89] as number | undefined;
+  const assetAge = f[Assets_FieldIds.asset_age_d2b] as number | undefined;
 
   const warrantyExpired = warrantyExpiresMs != null && isOverdue(warrantyExpiresMs);
   const calibrationOverdue = calibrationDueMs != null && isOverdue(calibrationDueMs);

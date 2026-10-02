@@ -2,6 +2,8 @@ import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
 import { SimpleGrid, Spinner, Text, Center } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import AssetCard from './AssetCard';
+import EmptyState from './EmptyState';
+import { CubeIcon } from './Icons';
 import { Assets_FieldIds } from '../../../../workspace/enums';
 import { WORKFLOWS, PHASES } from '../config';
 import { fetchAllPhases, filterByLink } from '../hailer/api-helpers';
@@ -44,7 +46,7 @@ export default function AssetGrid({ hailer, customerId, onCount }: Props) {
   if (loading) return <Center py={12}><Spinner /></Center>;
   if (error) return <Center py={12}><Text color="red.500">{error}</Text></Center>;
   if (assets.length === 0)
-    return <Center py={12}><Text color="subtleText">No assets for this customer.</Text></Center>;
+    return <EmptyState icon={CubeIcon} text="No assets on file for this customer." />;
 
   return (
     <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>

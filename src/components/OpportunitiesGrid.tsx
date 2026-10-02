@@ -15,12 +15,16 @@ import { Opportunity_FieldIds, Opportunity_PhaseIds } from '../../../../workspac
 import { WORKFLOWS, PHASES } from '../config';
 import { fetchAllPhases, filterByLink, formatDate, formatMoney } from '../hailer/api-helpers';
 import ClickableCard from './ClickableCard';
+import EmptyState from './EmptyState';
+import { TrendingIcon } from './Icons';
 
 interface Props {
   hailer: HailerApi;
   customerId: string;
   onCount?: (n: number) => void;
 }
+
+const CLOSED_PHASES: string[] = [Opportunity_PhaseIds.closed_won_dc0, Opportunity_PhaseIds.closed_lost_0ee];
 
 const PHASE_LABELS: Record<string, { label: string; color: string; accent: string }> = {
   [Opportunity_PhaseIds.discovery_639]: { label: 'Discovery', color: 'blue', accent: 'blue.400' },
@@ -44,8 +48,9 @@ export default function OpportunitiesGrid({ hailer, customerId, onCount }: Props
         const all = await fetchAllPhases(hailer, WORKFLOWS.opportunity, PHASES.opportunity);
         if (cancelled) return;
         const mine = filterByLink(all, Opportunity_FieldIds.lead_information_8ba, customerId);
-        setOpps(mine);
-        onCount?.(mine.length);
+        const open = mine.filter((o) => !CLOSED_PHASES.includes(o.currentPhase));
+        setOpps(open);
+        onCount?.(open.length);
       } catch (err) {
         if (!cancelled) setError((err as HailerError).msg ?? 'Failed to load opportunities');
       } finally {
@@ -60,7 +65,7 @@ export default function OpportunitiesGrid({ hailer, customerId, onCount }: Props
   if (loading) return <Center py={12}><Spinner /></Center>;
   if (error) return <Center py={12}><Text color="red.500">{error}</Text></Center>;
   if (opps.length === 0)
-    return <Center py={12}><Text color="subtleText">No opportunities.</Text></Center>;
+    return <EmptyState icon={TrendingIcon} text="No open opportunities for this customer." />;
 
   return (
     <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
