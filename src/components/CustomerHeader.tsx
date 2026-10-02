@@ -2,6 +2,7 @@ import { Activity, HailerApi } from '@hailer/app-sdk';
 import {
   Avatar,
   Box,
+  Flex,
   Heading,
   HStack,
   Icon,
@@ -61,6 +62,7 @@ export default function CustomerHeader({ hailer, customerId }: Props) {
   const tileBg = useColorModeValue('gray.50', 'gray.800');
   const tileBorder = useColorModeValue('gray.200', 'gray.600');
   const mutedText = useColorModeValue('gray.500', 'gray.400');
+  const mapBg = useColorModeValue('gray.100', 'gray.800');
 
   useEffect(() => {
     let cancelled = false;
@@ -103,6 +105,13 @@ export default function CustomerHeader({ hailer, customerId }: Props) {
 
   const address = [streetAddress, city].filter(Boolean).join(', ');
 
+  // No API key needed — Google Maps' plain embed mode geocodes a free-text query
+  // server-side. Falls back from full street address down to just the country.
+  const mapQuery = [streetAddress, city, country].filter(Boolean).join(', ') || country || null;
+  const mapUrl = mapQuery
+    ? `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`
+    : null;
+
   const stats: Stat[] = [];
   if (address) stats.push({ label: 'Address', value: address, icon: MapPinIcon, color: 'red.400' });
   if (country) stats.push({ label: 'Country', value: country, icon: GlobeIcon, color: 'cyan.500' });
@@ -125,70 +134,65 @@ export default function CustomerHeader({ hailer, customerId }: Props) {
       borderColor={borderColor}
       borderRadius="md"
       shadow="sm"
-      cursor="pointer"
-      onClick={() => void hailer.ui.activity.open(customer._id)}
-      transition="all 0.15s ease"
-      _hover={{ shadow: 'md', borderColor: 'blue.400' }}
-      p={5}
+      overflow="hidden"
     >
-      <HStack spacing={4} align="center" mb={stats.length > 0 ? 4 : 0} wrap="wrap" rowGap={3}>
-        {logoUrl && !logoError ? (
-          <Box
-            boxSize="4rem"
-            borderRadius="md"
-            bg="white"
-            border="1px"
-            borderColor={borderColor}
-            p={2}
-            flexShrink={0}
-          >
-            <Image
-              src={logoUrl}
-              alt={`${customer.name} logo`}
-              boxSize="100%"
-              objectFit="contain"
-              onError={() => setLogoError(true)}
+      <Flex direction={{ base: 'column', md: 'row' }}>
+        {/* Map */}
+        <Box flex={{ base: 'none', md: '0 0 300px' }} h={{ base: '180px', md: 'auto' }} minH={{ md: '220px' }} bg={mapBg}>
+          {mapUrl ? (
+            <iframe
+              title={`${customer.name} location`}
+              src={mapUrl}
+              width="100%"
+              height="100%"
+              style={{ border: 0, display: 'block', minHeight: '180px' }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
             />
-          </Box>
-        ) : (
-          <Avatar name={customer.name} size="lg" flexShrink={0} />
-        )}
-        <Box flex="1" minW={0}>
-          <Text fontSize="xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" mb={0.5}>
-            Customer
-          </Text>
-          <Heading fontSize="2xl" noOfLines={1}>
-            {customer.name}
-          </Heading>
+          ) : (
+            <Flex h="100%" minH="180px" align="center" justify="center">
+              <VStack spacing={2}>
+                <Icon as={MapPinIcon} boxSize={6} color={mutedText} />
+                <Text fontSize="xs" color={mutedText}>No address on file</Text>
+              </VStack>
+            </Flex>
+          )}
         </Box>
-        {accountManagerName && (
-          <HStack
-            bg={tileBg}
-            border="1px"
-            borderColor={tileBorder}
-            borderRadius="md"
-            px={3}
-            py={2}
-            spacing={2.5}
-            flexShrink={0}
-          >
-            <Avatar name={accountManagerName} size="sm" />
-            <VStack spacing={0} align="start">
-              <Text fontSize="2xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" lineHeight="1">
-                Account Manager
-              </Text>
-              <Text fontSize="sm" fontWeight="semibold" lineHeight="1.3">
-                {accountManagerName}
-              </Text>
-            </VStack>
-          </HStack>
-        )}
-      </HStack>
 
-      {stats.length > 0 && (
-        <Wrap spacing={3}>
-          {stats.map((s) => (
-            <WrapItem key={s.label}>
+        {/* Details */}
+        <Box flex="1" p={5} cursor="pointer" onClick={() => void hailer.ui.activity.open(customer._id)}
+          _hover={{ bg: tileBg }} transition="background 0.15s ease">
+          <HStack spacing={4} align="center" mb={stats.length > 0 ? 4 : 0} wrap="wrap" rowGap={3}>
+            {logoUrl && !logoError ? (
+              <Box
+                boxSize="4rem"
+                borderRadius="md"
+                bg="white"
+                border="1px"
+                borderColor={borderColor}
+                p={2}
+                flexShrink={0}
+              >
+                <Image
+                  src={logoUrl}
+                  alt={`${customer.name} logo`}
+                  boxSize="100%"
+                  objectFit="contain"
+                  onError={() => setLogoError(true)}
+                />
+              </Box>
+            ) : (
+              <Avatar name={customer.name} size="lg" flexShrink={0} />
+            )}
+            <Box flex="1" minW={0}>
+              <Text fontSize="xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" mb={0.5}>
+                Customer
+              </Text>
+              <Heading fontSize="2xl" noOfLines={1}>
+                {customer.name}
+              </Heading>
+            </Box>
+            {accountManagerName && (
               <HStack
                 bg={tileBg}
                 border="1px"
@@ -197,27 +201,56 @@ export default function CustomerHeader({ hailer, customerId }: Props) {
                 px={3}
                 py={2}
                 spacing={2.5}
+                flexShrink={0}
               >
-                <Icon as={s.icon} boxSize={4} color={s.color} flexShrink={0} />
-                <VStack spacing={0} align="start" maxW="14rem">
-                  <Text
-                    fontSize="2xs"
-                    color={mutedText}
-                    textTransform="uppercase"
-                    letterSpacing="wider"
-                    lineHeight="1"
-                  >
-                    {s.label}
+                <Avatar name={accountManagerName} size="sm" />
+                <VStack spacing={0} align="start">
+                  <Text fontSize="2xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" lineHeight="1">
+                    Account Manager
                   </Text>
-                  <Text fontSize="sm" fontWeight="semibold" lineHeight="1.3" noOfLines={2}>
-                    {s.value}
+                  <Text fontSize="sm" fontWeight="semibold" lineHeight="1.3">
+                    {accountManagerName}
                   </Text>
                 </VStack>
               </HStack>
-            </WrapItem>
-          ))}
-        </Wrap>
-      )}
+            )}
+          </HStack>
+
+          {stats.length > 0 && (
+            <Wrap spacing={3}>
+              {stats.map((s) => (
+                <WrapItem key={s.label}>
+                  <HStack
+                    bg={tileBg}
+                    border="1px"
+                    borderColor={tileBorder}
+                    borderRadius="md"
+                    px={3}
+                    py={2}
+                    spacing={2.5}
+                  >
+                    <Icon as={s.icon} boxSize={4} color={s.color} flexShrink={0} />
+                    <VStack spacing={0} align="start" maxW="14rem">
+                      <Text
+                        fontSize="2xs"
+                        color={mutedText}
+                        textTransform="uppercase"
+                        letterSpacing="wider"
+                        lineHeight="1"
+                      >
+                        {s.label}
+                      </Text>
+                      <Text fontSize="sm" fontWeight="semibold" lineHeight="1.3" noOfLines={2}>
+                        {s.value}
+                      </Text>
+                    </VStack>
+                  </HStack>
+                </WrapItem>
+              ))}
+            </Wrap>
+          )}
+        </Box>
+      </Flex>
     </Box>
   );
 }

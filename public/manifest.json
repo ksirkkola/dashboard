@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Added 4 new tabs to make this an actual '360 view' of a customer, not just half of one \u2014 Rentals, Online Orders, and Trips/IHS were completely missing, and ManikinPC existed live but not in this repo (reconstructed from the live bundle). Also fixed two stale field references found along the way (Payment Terms on the customer header, Asset link display on Support Ticket cards), added the same '+ Support Ticket' quick-create shortcut to Asset cards that ManikinPC cards already had, and restyled the customer header from a dark gradient/glow hero banner to a plain card matching the rest of the dashboard.",
-  "version": "1.6.0",
+  "versionDescription": "Reworked the customer header layout: a map (no API key needed \u2014 Google's plain embed geocodes the address server-side) now sits on the left, client details on the right, tabs below. Falls back from full street address down to just the country if the address is incomplete, and shows a plain empty state if there's no address at all.",
+  "version": "1.6.1",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
