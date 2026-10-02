@@ -56,8 +56,11 @@ export default function CustomerHeader({ hailer, customerId }: Props) {
   const [loading, setLoading] = useState(true);
   const [logoError, setLogoError] = useState(false);
 
-  const tileBg = useColorModeValue('whiteAlpha.900', 'whiteAlpha.200');
-  const tileBorder = useColorModeValue('whiteAlpha.500', 'whiteAlpha.300');
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const tileBg = useColorModeValue('gray.50', 'gray.800');
+  const tileBorder = useColorModeValue('gray.200', 'gray.600');
+  const mutedText = useColorModeValue('gray.500', 'gray.400');
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +79,7 @@ export default function CustomerHeader({ hailer, customerId }: Props) {
     };
   }, [hailer, customerId]);
 
-  if (loading) return <Skeleton height="9rem" mb={6} borderRadius="lg" />;
+  if (loading) return <Skeleton height="9rem" mb={6} borderRadius="md" />;
   if (!customer) return null;
 
   const f = customer.fields ?? {};
@@ -88,7 +91,7 @@ export default function CustomerHeader({ hailer, customerId }: Props) {
   const accountType = f[Customers_FieldIds.is_this_an_agent_client_0eb] as string | undefined;
   const isoLab = f[Customers_FieldIds.iso_17025_lab_a29] as string | undefined;
   const totalWon = f[Customers_FieldIds.total_won_898] as number | undefined;
-  const paymentTerms = f[Customers_FieldIds.client_payment_terms_688] as string | undefined;
+  const paymentTerms = f[Customers_FieldIds.client_payment_terms_6cd] as string | undefined;
   const accountManagerId = f[Customers_FieldIds.account_manager_b90] as string | undefined;
   const accountManager = accountManagerId ? user.map[accountManagerId] : undefined;
   const accountManagerName = accountManager
@@ -101,159 +104,120 @@ export default function CustomerHeader({ hailer, customerId }: Props) {
   const address = [streetAddress, city].filter(Boolean).join(', ');
 
   const stats: Stat[] = [];
-  if (address) stats.push({ label: 'Address', value: address, icon: MapPinIcon, color: 'red.300' });
-  if (country) stats.push({ label: 'Country', value: country, icon: GlobeIcon, color: 'cyan.300' });
-  if (industry) stats.push({ label: 'Industry', value: industry, icon: TagIcon, color: 'orange.300' });
-  if (vat) stats.push({ label: 'VAT', value: vat, icon: BuildingIcon, color: 'blue.300' });
+  if (address) stats.push({ label: 'Address', value: address, icon: MapPinIcon, color: 'red.400' });
+  if (country) stats.push({ label: 'Country', value: country, icon: GlobeIcon, color: 'cyan.500' });
+  if (industry) stats.push({ label: 'Industry', value: industry, icon: TagIcon, color: 'orange.400' });
+  if (vat) stats.push({ label: 'VAT', value: vat, icon: BuildingIcon, color: 'blue.400' });
   if (paymentTerms)
-    stats.push({ label: 'Payment Terms', value: paymentTerms, icon: CreditCardIcon, color: 'pink.300' });
+    stats.push({ label: 'Payment Terms', value: paymentTerms, icon: CreditCardIcon, color: 'pink.400' });
   if (accountType && accountType !== 'No')
-    stats.push({ label: 'Account', value: accountType, icon: AwardIcon, color: 'yellow.300' });
+    stats.push({ label: 'Account', value: accountType, icon: AwardIcon, color: 'yellow.500' });
   if (isoLab && isoLab !== 'No')
-    stats.push({ label: 'ISO 17025', value: isoLab, icon: AwardIcon, color: 'purple.300' });
+    stats.push({ label: 'ISO 17025', value: isoLab, icon: AwardIcon, color: 'purple.400' });
   if (totalWon != null && totalWon > 0)
-    stats.push({ label: 'Total Won', value: formatMoney(totalWon), icon: EuroIcon, color: 'green.300' });
+    stats.push({ label: 'Total Won', value: formatMoney(totalWon), icon: EuroIcon, color: 'green.500' });
 
   return (
     <Box
       mb={6}
-      position="relative"
-      borderRadius="xl"
-      overflow="hidden"
+      bg={cardBg}
+      border="1px"
+      borderColor={borderColor}
+      borderRadius="md"
+      shadow="sm"
       cursor="pointer"
       onClick={() => void hailer.ui.activity.open(customer._id)}
-      transition="transform 0.2s"
-      _hover={{ transform: 'translateY(-1px)' }}
-      bgGradient="linear(135deg, customColors.baseBlue, #1a1a4e)"
-      shadow="lg"
+      transition="all 0.15s ease"
+      _hover={{ shadow: 'md', borderColor: 'blue.400' }}
+      p={5}
     >
-      {/* Ambient glow accents */}
-      <Box
-        position="absolute"
-        top="-30%"
-        right="-8%"
-        boxSize="18rem"
-        borderRadius="full"
-        bg="customColors.accentGreen"
-        opacity={0.25}
-        filter="blur(70px)"
-        pointerEvents="none"
-      />
-      <Box
-        position="absolute"
-        bottom="-40%"
-        left="10%"
-        boxSize="14rem"
-        borderRadius="full"
-        bg="customColors.baseBlueLight"
-        opacity={0.2}
-        filter="blur(70px)"
-        pointerEvents="none"
-      />
-      {/* Subtle dot pattern */}
-      <Box
-        position="absolute"
-        inset={0}
-        opacity={0.15}
-        pointerEvents="none"
-        backgroundImage="radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)"
-        backgroundSize="18px 18px"
-      />
-
-      <Box p={6} position="relative">
-        <HStack spacing={5} align="center" mb={stats.length > 0 ? 5 : 0} wrap="wrap" rowGap={3}>
-          {logoUrl && !logoError ? (
-            <Box
-              boxSize="4.5rem"
-              borderRadius="lg"
-              bg="white"
-              p={2}
-              boxShadow="0 0 0 4px rgba(255,255,255,0.25)"
-              flexShrink={0}
-            >
-              <Image
-                src={logoUrl}
-                alt={`${customer.name} logo`}
-                boxSize="100%"
-                objectFit="contain"
-                onError={() => setLogoError(true)}
-              />
-            </Box>
-          ) : (
-            <Avatar
-              name={customer.name}
-              size="xl"
-              bg="whiteAlpha.300"
-              color="white"
-              boxShadow="0 0 0 4px rgba(255,255,255,0.25)"
+      <HStack spacing={4} align="center" mb={stats.length > 0 ? 4 : 0} wrap="wrap" rowGap={3}>
+        {logoUrl && !logoError ? (
+          <Box
+            boxSize="4rem"
+            borderRadius="md"
+            bg="white"
+            border="1px"
+            borderColor={borderColor}
+            p={2}
+            flexShrink={0}
+          >
+            <Image
+              src={logoUrl}
+              alt={`${customer.name} logo`}
+              boxSize="100%"
+              objectFit="contain"
+              onError={() => setLogoError(true)}
             />
-          )}
-          <Box flex="1" minW={0}>
-            <Text fontSize="xs" color="whiteAlpha.800" textTransform="uppercase" letterSpacing="wider" mb={1}>
-              Customer
-            </Text>
-            <Heading fontSize="3xl" color="white" noOfLines={1}>
-              {customer.name}
-            </Heading>
           </Box>
-          {accountManagerName && (
-            <HStack
-              bg="whiteAlpha.200"
-              borderRadius="md"
-              px={3}
-              py={2}
-              spacing={2.5}
-              backdropFilter="blur(8px)"
-              flexShrink={0}
-            >
-              <Avatar name={accountManagerName} size="sm" />
-              <VStack spacing={0} align="start">
-                <Text fontSize="2xs" color="whiteAlpha.800" textTransform="uppercase" letterSpacing="wider" lineHeight="1">
-                  Your Account Manager
-                </Text>
-                <Text fontSize="sm" fontWeight="semibold" color="white" lineHeight="1.3">
-                  {accountManagerName}
-                </Text>
-              </VStack>
-            </HStack>
-          )}
-        </HStack>
-
-        {stats.length > 0 && (
-          <Wrap spacing={3}>
-            {stats.map((s) => (
-              <WrapItem key={s.label}>
-                <HStack
-                  bg={tileBg}
-                  border="1px solid"
-                  borderColor={tileBorder}
-                  borderRadius="md"
-                  px={3}
-                  py={2}
-                  spacing={2.5}
-                  backdropFilter="blur(8px)"
-                >
-                  <Icon as={s.icon} boxSize={4} color={s.color} flexShrink={0} />
-                  <VStack spacing={0} align="start" maxW="14rem">
-                    <Text
-                      fontSize="2xs"
-                      color="whiteAlpha.800"
-                      textTransform="uppercase"
-                      letterSpacing="wider"
-                      lineHeight="1"
-                    >
-                      {s.label}
-                    </Text>
-                    <Text fontSize="sm" fontWeight="semibold" color="white" lineHeight="1.3" noOfLines={2}>
-                      {s.value}
-                    </Text>
-                  </VStack>
-                </HStack>
-              </WrapItem>
-            ))}
-          </Wrap>
+        ) : (
+          <Avatar name={customer.name} size="lg" flexShrink={0} />
         )}
-      </Box>
+        <Box flex="1" minW={0}>
+          <Text fontSize="xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" mb={0.5}>
+            Customer
+          </Text>
+          <Heading fontSize="2xl" noOfLines={1}>
+            {customer.name}
+          </Heading>
+        </Box>
+        {accountManagerName && (
+          <HStack
+            bg={tileBg}
+            border="1px"
+            borderColor={tileBorder}
+            borderRadius="md"
+            px={3}
+            py={2}
+            spacing={2.5}
+            flexShrink={0}
+          >
+            <Avatar name={accountManagerName} size="sm" />
+            <VStack spacing={0} align="start">
+              <Text fontSize="2xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" lineHeight="1">
+                Account Manager
+              </Text>
+              <Text fontSize="sm" fontWeight="semibold" lineHeight="1.3">
+                {accountManagerName}
+              </Text>
+            </VStack>
+          </HStack>
+        )}
+      </HStack>
+
+      {stats.length > 0 && (
+        <Wrap spacing={3}>
+          {stats.map((s) => (
+            <WrapItem key={s.label}>
+              <HStack
+                bg={tileBg}
+                border="1px"
+                borderColor={tileBorder}
+                borderRadius="md"
+                px={3}
+                py={2}
+                spacing={2.5}
+              >
+                <Icon as={s.icon} boxSize={4} color={s.color} flexShrink={0} />
+                <VStack spacing={0} align="start" maxW="14rem">
+                  <Text
+                    fontSize="2xs"
+                    color={mutedText}
+                    textTransform="uppercase"
+                    letterSpacing="wider"
+                    lineHeight="1"
+                  >
+                    {s.label}
+                  </Text>
+                  <Text fontSize="sm" fontWeight="semibold" lineHeight="1.3" noOfLines={2}>
+                    {s.value}
+                  </Text>
+                </VStack>
+              </HStack>
+            </WrapItem>
+          ))}
+        </Wrap>
+      )}
     </Box>
   );
 }

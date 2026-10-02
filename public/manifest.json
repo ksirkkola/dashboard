@@ -10,8 +10,8 @@
       }
     }
   },
-  "description": "Customer dashboard — assets, support tickets, contacts and opportunities at a glance.",
-  "versionDescription": "Added isLazy to the main tabs so each tab's data only loads when you actually open it, instead of every tab firing its data load simultaneously on every page open/refresh \u2014 reduces API request bursts and rate-limit risk.",
-  "version": "1.3.0",
+  "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
+  "versionDescription": "Added 4 new tabs to make this an actual '360 view' of a customer, not just half of one \u2014 Rentals, Online Orders, and Trips/IHS were completely missing, and ManikinPC existed live but not in this repo (reconstructed from the live bundle). Also fixed two stale field references found along the way (Payment Terms on the customer header, Asset link display on Support Ticket cards), added the same '+ Support Ticket' quick-create shortcut to Asset cards that ManikinPC cards already had, and restyled the customer header from a dark gradient/glow hero banner to a plain card matching the rest of the dashboard.",
+  "version": "1.6.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }

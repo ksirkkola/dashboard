@@ -21,8 +21,14 @@ import CustomerHeader from './components/CustomerHeader';
 import TicketsGrid from './components/TicketsGrid';
 import ContactsList from './components/ContactsList';
 import OpportunitiesGrid from './components/OpportunitiesGrid';
+import ManikinPCGrid from './components/ManikinPCGrid';
+import RentalGrid from './components/RentalGrid';
+import OnlineOrderGrid from './components/OnlineOrderGrid';
+import TripGrid from './components/TripGrid';
 import { useApp } from './hailer/use-app';
-import { CubeIcon, TicketIcon, UsersIcon, TrendingIcon } from './components/Icons';
+import {
+  CubeIcon, TicketIcon, UsersIcon, TrendingIcon, CreditCardIcon, TruckIcon, PackageIcon, MapPinIcon,
+} from './components/Icons';
 
 interface TabLabelProps {
   label: string;
@@ -52,6 +58,10 @@ export default function App() {
   const [ticketCount, setTicketCount] = useState<number | null>(null);
   const [contactCount, setContactCount] = useState<number | null>(null);
   const [oppCount, setOppCount] = useState<number | null>(null);
+  const [manikinpcCount, setManikinpcCount] = useState<number | null>(null);
+  const [rentalCount, setRentalCount] = useState<number | null>(null);
+  const [onlineOrderCount, setOnlineOrderCount] = useState<number | null>(null);
+  const [tripCount, setTripCount] = useState<number | null>(null);
 
   useEffect(() => {
     void api.init();
@@ -68,6 +78,10 @@ export default function App() {
     setTicketCount(null);
     setContactCount(null);
     setOppCount(null);
+    setManikinpcCount(null);
+    setRentalCount(null);
+    setOnlineOrderCount(null);
+    setTripCount(null);
   }, [customerId]);
 
   if (inside === null) {
@@ -139,6 +153,10 @@ export default function App() {
               <Tab><TabLabel label="Support" count={ticketCount} icon={TicketIcon} /></Tab>
               <Tab><TabLabel label="Contacts" count={contactCount} icon={UsersIcon} /></Tab>
               <Tab><TabLabel label="Opportunities" count={oppCount} icon={TrendingIcon} /></Tab>
+              <Tab><TabLabel label="ManikinPC" count={manikinpcCount} icon={CreditCardIcon} /></Tab>
+              <Tab><TabLabel label="Rentals" count={rentalCount} icon={TruckIcon} /></Tab>
+              <Tab><TabLabel label="Online Orders" count={onlineOrderCount} icon={PackageIcon} /></Tab>
+              <Tab><TabLabel label="Trips" count={tripCount} icon={MapPinIcon} /></Tab>
             </TabList>
             <TabPanels>
               <TabPanel px={0} pt={4}>
@@ -152,6 +170,18 @@ export default function App() {
               </TabPanel>
               <TabPanel px={0} pt={4}>
                 <OpportunitiesGrid hailer={hailer} customerId={customerId} onCount={setOppCount} />
+              </TabPanel>
+              <TabPanel px={0} pt={4}>
+                <ManikinPCGrid hailer={hailer} customerId={customerId} onCount={setManikinpcCount} />
+              </TabPanel>
+              <TabPanel px={0} pt={4}>
+                <RentalGrid hailer={hailer} customerId={customerId} onCount={setRentalCount} />
+              </TabPanel>
+              <TabPanel px={0} pt={4}>
+                <OnlineOrderGrid hailer={hailer} customerId={customerId} onCount={setOnlineOrderCount} />
+              </TabPanel>
+              <TabPanel px={0} pt={4}>
+                <TripGrid hailer={hailer} customerId={customerId} onCount={setTripCount} />
               </TabPanel>
             </TabPanels>
           </Tabs>

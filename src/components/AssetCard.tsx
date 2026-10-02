@@ -1,20 +1,27 @@
-import { Activity, HailerApi } from '@hailer/app-sdk';
+import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
 import {
   Badge,
+  Button,
   CardBody,
   CardHeader,
   Heading,
   Text,
   VStack,
   HStack,
+  useToast,
 } from '@chakra-ui/react';
-import { Assets_FieldIds } from '../../../../workspace/enums';
+import { MouseEvent, useState } from 'react';
+import {
+  Assets_FieldIds, Support_Tickets_FieldIds, Support_Tickets_PhaseIds,
+} from '../../../../workspace/enums';
+import { WORKFLOWS } from '../config';
 import ClickableCard from './ClickableCard';
 import { formatDate } from '../hailer/api-helpers';
 
 interface AssetCardProps {
   hailer: HailerApi;
   activity: Activity;
+  customerId?: string;
 }
 
 function isOverdue(unixMs: number): boolean {
@@ -45,7 +52,9 @@ function FieldRow({ label, value, alert }: FieldRowProps) {
   );
 }
 
-export default function AssetCard({ hailer, activity }: AssetCardProps) {
+export default function AssetCard({ hailer, activity, customerId }: AssetCardProps) {
+  const toast = useToast();
+  const [creating, setCreating] = useState(false);
   const f = activity.fields ?? {};
 
   const assetName = f[Assets_FieldIds.asset_name_8c8] as string | undefined;
@@ -64,6 +73,30 @@ export default function AssetCard({ hailer, activity }: AssetCardProps) {
     : calibrationOverdue
       ? 'orange.400'
       : 'green.400';
+
+  // Native create dialog doesn't reliably accept an arbitrary non-initial phaseId — create
+  // at the workflow's default phase, then move it to Software Upgrade as a separate step.
+  async function createSupportTicket(e: MouseEvent) {
+    e.stopPropagation();
+    setCreating(true);
+    try {
+      const created = await hailer.activity.create(WORKFLOWS.supportTickets, [{
+        name: `ThermDAC quote + remote install — ${assetName ?? activity.name}`.slice(0, 200),
+        fields: {
+          [Support_Tickets_FieldIds.asset_792]: activity._id,
+          ...(customerId ? { [Support_Tickets_FieldIds.customer_bd7]: customerId } : {}),
+          [Support_Tickets_FieldIds.deployment_ed0]: 'Remote Session',
+        },
+      }]);
+      const ticket = created?.[0];
+      if (!ticket) { setCreating(false); return; }
+      await hailer.activity.update([{ _id: ticket._id, phaseId: Support_Tickets_PhaseIds.software_upgrade_4d5 }], {});
+      toast({ title: 'Support ticket created', status: 'success', duration: 3000 });
+    } catch (err) {
+      toast({ title: "Couldn't create the support ticket", description: (err as HailerError).msg ?? String(err), status: 'error', duration: 6000 });
+    }
+    setCreating(false);
+  }
 
   return (
     <ClickableCard
@@ -128,6 +161,12 @@ export default function AssetCard({ hailer, activity }: AssetCardProps) {
               </Text>
             )}
         </VStack>
+        <Button
+          mt={3} size="xs" variant="outline" isLoading={creating}
+          onClick={createSupportTicket}
+        >
+          + Support Ticket
+        </Button>
       </CardBody>
     </ClickableCard>
   );

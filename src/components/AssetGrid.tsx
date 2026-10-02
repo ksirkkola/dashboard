@@ -51,7 +51,7 @@ export default function AssetGrid({ hailer, customerId, onCount }: Props) {
   return (
     <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>
       {assets.map((a) => (
-        <AssetCard key={a._id} hailer={hailer} activity={a} />
+        <AssetCard key={a._id} hailer={hailer} activity={a} customerId={customerId} />
       ))}
     </SimpleGrid>
   );

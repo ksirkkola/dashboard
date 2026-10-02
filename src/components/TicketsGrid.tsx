@@ -76,7 +76,8 @@ export default function TicketsGrid({ hailer, customerId, onCount }: Props) {
         const f = t.fields ?? {};
         const phase = PHASE_LABELS[t.currentPhase] ?? { label: 'Unknown', color: 'gray', accent: 'gray.400' };
         const description = f[Support_Tickets_FieldIds.client_identified_issues_bd9] as string | undefined;
-        const asset = f[Support_Tickets_FieldIds.asset_313] as string | undefined;
+        const assetLinkValue = f[Support_Tickets_FieldIds.asset_792] as { name?: string } | { name?: string }[] | undefined;
+        const asset = Array.isArray(assetLinkValue) ? assetLinkValue[0]?.name : assetLinkValue?.name;
         const budget = f[Support_Tickets_FieldIds.project_budget_bda] as number | undefined;
         const duration = f[Support_Tickets_FieldIds.project_duration_be8] as number | undefined;
         const engineerId = f[Support_Tickets_FieldIds.support_engineer_bdd] as string | undefined;
