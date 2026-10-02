@@ -19,7 +19,10 @@ async function fetchAllInPhase(
     } catch {
       break;
     }
-    all.push(...page);
+    // activity.currentPhase coming back from list() is unreliable — but since this call
+    // itself specified phaseId, we already know with certainty which phase every item in
+    // this page belongs to. Stamp it, overriding whatever (possibly wrong) value came back.
+    all.push(...page.map((a) => ({ ...a, currentPhase: phaseId })));
     if (page.length < LIST_PAGE_SIZE) break;
     skip += LIST_PAGE_SIZE;
   }

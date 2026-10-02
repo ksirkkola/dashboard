@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Reworked the customer header layout: a map (no API key needed \u2014 Google's plain embed geocodes the address server-side) now sits on the left, client details on the right, tabs below. Falls back from full street address down to just the country if the address is incomplete, and shows a plain empty state if there's no address at all.",
-  "version": "1.6.1",
+  "versionDescription": "Fixed wrong statuses showing on Trips (and every other tab) \u2014 activity.currentPhase coming back from the list API is unreliable, so every card was showing whatever phase happened to come back instead of the phase it was actually fetched under. Now stamped with the known-correct phase at fetch time, fixing all 8 tabs at once. Also added a collapsed 'Closed' section at the bottom of the Trips tab so finished visits don't clutter the active list.",
+  "version": "1.7.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }

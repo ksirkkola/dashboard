@@ -1,5 +1,8 @@
 import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
-import { Badge, Box, CardBody, Center, Heading, HStack, SimpleGrid, Spinner, Text } from '@chakra-ui/react';
+import {
+  Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel,
+  Badge, Box, CardBody, Center, Heading, HStack, SimpleGrid, Spinner, Text, useColorModeValue,
+} from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { TRIPS_IHS_FieldIds, TRIPS_IHS_PhaseIds } from '../../../../workspace/enums';
 import { WORKFLOWS, PHASES } from '../config';
@@ -25,11 +28,52 @@ const PHASE_LABELS: Record<string, { label: string; color: string; accent: strin
   [TRIPS_IHS_PhaseIds.closed_b10]: { label: 'Closed', color: 'green', accent: 'green.400' },
 };
 
+interface TripCardProps {
+  trip: Activity;
+  hailer: HailerApi;
+  userMap: Record<string, { firstname: string; lastname: string }>;
+}
+
+function TripCard({ trip, hailer, userMap }: TripCardProps) {
+  const f = trip.fields ?? {};
+  const phase = PHASE_LABELS[trip.currentPhase] ?? { label: 'Unknown', color: 'gray', accent: 'gray.400' };
+  const ticketCode = f[TRIPS_IHS_FieldIds.ticket_code_b27] as string | undefined;
+  const purpose = f[TRIPS_IHS_FieldIds.purpose_for_onsite_trip_b2b] as string | undefined;
+  const tripType = f[TRIPS_IHS_FieldIds.service_trip_type_b2e] as string | undefined;
+  const arrivalMs = f[TRIPS_IHS_FieldIds.estimated_arrival_date_b35] as number | undefined;
+  const daysOnsite = f[TRIPS_IHS_FieldIds.days_onsite_b39] as number | undefined;
+  const engineerId = f[TRIPS_IHS_FieldIds.assigned_engineer_b37] as string | undefined;
+  const engineer = engineerId ? userMap[engineerId] : undefined;
+  const engineerName = engineer ? `${engineer.firstname} ${engineer.lastname}`.trim() : undefined;
+
+  return (
+    <ClickableCard accentColor={phase.accent} onOpen={() => void hailer.ui.activity.open(trip._id)}>
+      <CardBody>
+        <HStack justify="space-between" align="start" mb={2}>
+          <Heading fontSize="sm" noOfLines={1}>{ticketCode || trip.name}</Heading>
+          <Badge colorScheme={phase.color} flexShrink={0}>{phase.label}</Badge>
+        </HStack>
+        {(purpose || tripType) && (
+          <Text fontSize="xs" color="subtleText" mb={2}>
+            {[purpose, tripType].filter(Boolean).join(' · ')}
+          </Text>
+        )}
+        <Box fontSize="xs" color="subtleText">
+          {arrivalMs != null && <Text>Arrival: {formatDate(arrivalMs)}</Text>}
+          {daysOnsite != null && <Text>Onsite: {daysOnsite} day{daysOnsite === 1 ? '' : 's'}</Text>}
+          {engineerName && <Text>Engineer: {engineerName}</Text>}
+        </Box>
+      </CardBody>
+    </ClickableCard>
+  );
+}
+
 export default function TripGrid({ hailer, customerId, onCount }: Props) {
   const { user } = useApp();
   const [trips, setTrips] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   useEffect(() => {
     let cancelled = false;
@@ -56,45 +100,36 @@ export default function TripGrid({ hailer, customerId, onCount }: Props) {
   if (trips.length === 0)
     return <EmptyState icon={MapPinIcon} text="No trips / IHS visits on file for this customer." />;
 
-  return (
-    <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
-      {trips.map((t) => {
-        const f = t.fields ?? {};
-        const phase = PHASE_LABELS[t.currentPhase] ?? { label: 'Unknown', color: 'gray', accent: 'gray.400' };
-        const ticketCode = f[TRIPS_IHS_FieldIds.ticket_code_b27] as string | undefined;
-        const purpose = f[TRIPS_IHS_FieldIds.purpose_for_onsite_trip_b2b] as string | undefined;
-        const tripType = f[TRIPS_IHS_FieldIds.service_trip_type_b2e] as string | undefined;
-        const arrivalMs = f[TRIPS_IHS_FieldIds.estimated_arrival_date_b35] as number | undefined;
-        const daysOnsite = f[TRIPS_IHS_FieldIds.days_onsite_b39] as number | undefined;
-        const engineerId = f[TRIPS_IHS_FieldIds.assigned_engineer_b37] as string | undefined;
-        const engineer = engineerId ? user.map[engineerId] : undefined;
-        const engineerName = engineer ? `${engineer.firstname} ${engineer.lastname}`.trim() : undefined;
+  const openTrips = trips.filter((t) => t.currentPhase !== TRIPS_IHS_PhaseIds.closed_b10);
+  const closedTrips = trips.filter((t) => t.currentPhase === TRIPS_IHS_PhaseIds.closed_b10);
 
-        return (
-          <ClickableCard
-            key={t._id}
-            accentColor={phase.accent}
-            onOpen={() => void hailer.ui.activity.open(t._id)}
-          >
-            <CardBody>
-              <HStack justify="space-between" align="start" mb={2}>
-                <Heading fontSize="sm" noOfLines={1}>{ticketCode || t.name}</Heading>
-                <Badge colorScheme={phase.color} flexShrink={0}>{phase.label}</Badge>
-              </HStack>
-              {(purpose || tripType) && (
-                <Text fontSize="xs" color="subtleText" mb={2}>
-                  {[purpose, tripType].filter(Boolean).join(' · ')}
-                </Text>
-              )}
-              <Box fontSize="xs" color="subtleText">
-                {arrivalMs != null && <Text>Arrival: {formatDate(arrivalMs)}</Text>}
-                {daysOnsite != null && <Text>Onsite: {daysOnsite} day{daysOnsite === 1 ? '' : 's'}</Text>}
-                {engineerName && <Text>Engineer: {engineerName}</Text>}
+  return (
+    <Box>
+      {openTrips.length === 0 ? (
+        <Text color="subtleText" mb={4}>No open trips / IHS visits.</Text>
+      ) : (
+        <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4} mb={closedTrips.length > 0 ? 4 : 0}>
+          {openTrips.map((t) => <TripCard key={t._id} trip={t} hailer={hailer} userMap={user.map} />)}
+        </SimpleGrid>
+      )}
+
+      {closedTrips.length > 0 && (
+        <Accordion allowToggle>
+          <AccordionItem border="1px" borderColor={borderColor} borderRadius="md">
+            <AccordionButton>
+              <Box flex="1" textAlign="left" fontSize="sm" fontWeight="medium">
+                Closed ({closedTrips.length})
               </Box>
-            </CardBody>
-          </ClickableCard>
-        );
-      })}
-    </SimpleGrid>
+              <AccordionIcon />
+            </AccordionButton>
+            <AccordionPanel pb={4}>
+              <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
+                {closedTrips.map((t) => <TripCard key={t._id} trip={t} hailer={hailer} userMap={user.map} />)}
+              </SimpleGrid>
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
+      )}
+    </Box>
   );
 }
