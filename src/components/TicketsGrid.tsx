@@ -1,5 +1,10 @@
 import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
 import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
   Avatar,
   Badge,
   Box,
@@ -10,9 +15,10 @@ import {
   SimpleGrid,
   Spinner,
   Text,
+  useColorModeValue,
   VStack,
 } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Support_Tickets_FieldIds, Support_Tickets_PhaseIds } from '../../../../workspace/enums';
 import { WORKFLOWS, PHASES } from '../config';
 import { fetchAllPhases, filterByLink, formatMoney } from '../hailer/api-helpers';
@@ -42,6 +48,7 @@ export default function TicketsGrid({ hailer, customerId, onCount }: Props) {
   const [tickets, setTickets] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   useEffect(() => {
     let cancelled = false;
@@ -65,61 +72,105 @@ export default function TicketsGrid({ hailer, customerId, onCount }: Props) {
     };
   }, [hailer, customerId]);
 
+  // Done tickets are tucked into a collapsed section at the bottom — same pattern
+  // as the Support Dashboard's "Closed" section — so the main grid stays focused
+  // on tickets that are still active for this customer.
+  const activeTickets = useMemo(
+    () => tickets.filter((t) => t.currentPhase !== Support_Tickets_PhaseIds.done_bee),
+    [tickets],
+  );
+  const closedTickets = useMemo(
+    () => tickets.filter((t) => t.currentPhase === Support_Tickets_PhaseIds.done_bee),
+    [tickets],
+  );
+
+  function renderCard(t: Activity) {
+    const f = t.fields ?? {};
+    const phase = PHASE_LABELS[t.currentPhase] ?? { label: 'Unknown', color: 'gray', accent: 'gray.400' };
+    const ticketCode = f[Support_Tickets_FieldIds.ticket_code_78f] as string | undefined;
+    const description = f[Support_Tickets_FieldIds.client_identified_issues_bd9] as string | undefined;
+    const assetLinkValue = f[Support_Tickets_FieldIds.asset_792] as { name?: string } | { name?: string }[] | undefined;
+    const asset = Array.isArray(assetLinkValue) ? assetLinkValue[0]?.name : assetLinkValue?.name;
+    const budget = f[Support_Tickets_FieldIds.project_budget_bda] as number | undefined;
+    const duration = f[Support_Tickets_FieldIds.project_duration_be8] as number | undefined;
+    const engineerId = f[Support_Tickets_FieldIds.support_engineer_bdd] as string | undefined;
+    const engineer = engineerId ? user.map[engineerId] : undefined;
+    const engineerName = engineer ? `${engineer.firstname} ${engineer.lastname}`.trim() : undefined;
+
+    return (
+      <ClickableCard
+        key={t._id}
+        accentColor={phase.accent}
+        onOpen={() => void hailer.ui.activity.open(t._id)}
+      >
+        <CardBody>
+          <HStack justify="space-between" align="start" mb={1}>
+            {ticketCode && (
+              <Text fontSize="xs" fontWeight="bold" color="subtleText" fontFamily="mono">{ticketCode}</Text>
+            )}
+            <Badge colorScheme={phase.color} flexShrink={0}>{phase.label}</Badge>
+          </HStack>
+          <Heading fontSize="sm" noOfLines={1} mb={2}>{t.name}</Heading>
+          {description && (
+            <Text fontSize="sm" color="subtleText" noOfLines={3} mb={2}>
+              {description}
+            </Text>
+          )}
+          {engineerName && (
+            <HStack spacing={2} mb={2}>
+              <Avatar name={engineerName} size="2xs" />
+              <VStack spacing={0} align="start">
+                <Text fontSize="2xs" color="subtleText" textTransform="uppercase" letterSpacing="wider" lineHeight="1">
+                  Support Engineer
+                </Text>
+                <Text fontSize="xs" fontWeight="semibold" lineHeight="1.3">{engineerName}</Text>
+              </VStack>
+            </HStack>
+          )}
+          <Box fontSize="xs" color="subtleText">
+            {asset && <Text noOfLines={1}>Asset: {asset}</Text>}
+            {budget != null && <Text>Budget: {formatMoney(budget)}</Text>}
+            {duration != null && <Text>Duration: {duration} day{duration === 1 ? '' : 's'}</Text>}
+          </Box>
+        </CardBody>
+      </ClickableCard>
+    );
+  }
+
   if (loading) return <Center py={12}><Spinner /></Center>;
   if (error) return <Center py={12}><Text color="red.500">{error}</Text></Center>;
   if (tickets.length === 0)
     return <EmptyState icon={TicketIcon} text="No support tickets yet." />;
 
   return (
-    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-      {tickets.map((t) => {
-        const f = t.fields ?? {};
-        const phase = PHASE_LABELS[t.currentPhase] ?? { label: 'Unknown', color: 'gray', accent: 'gray.400' };
-        const description = f[Support_Tickets_FieldIds.client_identified_issues_bd9] as string | undefined;
-        const assetLinkValue = f[Support_Tickets_FieldIds.asset_792] as { name?: string } | { name?: string }[] | undefined;
-        const asset = Array.isArray(assetLinkValue) ? assetLinkValue[0]?.name : assetLinkValue?.name;
-        const budget = f[Support_Tickets_FieldIds.project_budget_bda] as number | undefined;
-        const duration = f[Support_Tickets_FieldIds.project_duration_be8] as number | undefined;
-        const engineerId = f[Support_Tickets_FieldIds.support_engineer_bdd] as string | undefined;
-        const engineer = engineerId ? user.map[engineerId] : undefined;
-        const engineerName = engineer ? `${engineer.firstname} ${engineer.lastname}`.trim() : undefined;
+    <Box>
+      {activeTickets.length === 0 ? (
+        <Text color="subtleText" fontSize="sm" mb={closedTickets.length > 0 ? 4 : 0}>
+          No active support tickets for this customer.
+        </Text>
+      ) : (
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4} mb={closedTickets.length > 0 ? 4 : 0}>
+          {activeTickets.map(renderCard)}
+        </SimpleGrid>
+      )}
 
-        return (
-          <ClickableCard
-            key={t._id}
-            accentColor={phase.accent}
-            onOpen={() => void hailer.ui.activity.open(t._id)}
-          >
-            <CardBody>
-              <HStack justify="space-between" align="start" mb={2}>
-                <Heading fontSize="sm" noOfLines={1}>{t.name}</Heading>
-                <Badge colorScheme={phase.color} flexShrink={0}>{phase.label}</Badge>
-              </HStack>
-              {description && (
-                <Text fontSize="sm" color="subtleText" noOfLines={3} mb={2}>
-                  {description}
-                </Text>
-              )}
-              {engineerName && (
-                <HStack spacing={2} mb={2}>
-                  <Avatar name={engineerName} size="2xs" />
-                  <VStack spacing={0} align="start">
-                    <Text fontSize="2xs" color="subtleText" textTransform="uppercase" letterSpacing="wider" lineHeight="1">
-                      Support Engineer
-                    </Text>
-                    <Text fontSize="xs" fontWeight="semibold" lineHeight="1.3">{engineerName}</Text>
-                  </VStack>
-                </HStack>
-              )}
-              <Box fontSize="xs" color="subtleText">
-                {asset && <Text noOfLines={1}>Asset: {asset}</Text>}
-                {budget != null && <Text>Budget: {formatMoney(budget)}</Text>}
-                {duration != null && <Text>Duration: {duration} day{duration === 1 ? '' : 's'}</Text>}
+      {closedTickets.length > 0 && (
+        <Accordion allowToggle>
+          <AccordionItem border="1px" borderColor={borderColor} borderRadius="md">
+            <AccordionButton>
+              <Box flex="1" textAlign="left" fontSize="sm" fontWeight="medium">
+                Closed ({closedTickets.length})
               </Box>
-            </CardBody>
-          </ClickableCard>
-        );
-      })}
-    </SimpleGrid>
+              <AccordionIcon />
+            </AccordionButton>
+            <AccordionPanel pb={4}>
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+                {closedTickets.map(renderCard)}
+              </SimpleGrid>
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
+      )}
+    </Box>
   );
 }
