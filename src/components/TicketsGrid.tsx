@@ -30,6 +30,7 @@ import { TicketIcon } from './Icons';
 interface Props {
   hailer: HailerApi;
   customerId: string;
+  refreshKey?: number;
   onCount?: (n: number) => void;
 }
 
@@ -43,7 +44,7 @@ const PHASE_LABELS: Record<string, { label: string; color: string; accent: strin
   [Support_Tickets_PhaseIds.done_bee]: { label: 'Done', color: 'gray', accent: 'gray.400' },
 };
 
-export default function TicketsGrid({ hailer, customerId, onCount }: Props) {
+export default function TicketsGrid({ hailer, customerId, refreshKey, onCount }: Props) {
   const { user } = useApp();
   const [tickets, setTickets] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +71,7 @@ export default function TicketsGrid({ hailer, customerId, onCount }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [hailer, customerId]);
+  }, [hailer, customerId, refreshKey]);
 
   // Done tickets are tucked into a collapsed section at the bottom — same pattern
   // as the Support Dashboard's "Closed" section — so the main grid stays focused

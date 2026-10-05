@@ -42,6 +42,7 @@ function firstFileId(raw: unknown): string | undefined {
 interface Props {
   hailer: HailerApi;
   customerId: string;
+  refreshKey?: number;
 }
 
 interface Stat {
@@ -51,7 +52,7 @@ interface Stat {
   color: string;
 }
 
-export default function CustomerHeader({ hailer, customerId }: Props) {
+export default function CustomerHeader({ hailer, customerId, refreshKey }: Props) {
   const { user } = useApp();
   const [customer, setCustomer] = useState<Activity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +80,7 @@ export default function CustomerHeader({ hailer, customerId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [hailer, customerId]);
+  }, [hailer, customerId, refreshKey]);
 
   if (loading) return <Skeleton height="9rem" mb={6} borderRadius="md" />;
   if (!customer) return null;

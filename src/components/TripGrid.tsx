@@ -15,6 +15,7 @@ import { MapPinIcon } from './Icons';
 interface Props {
   hailer: HailerApi;
   customerId: string;
+  refreshKey?: number;
   onCount?: (n: number) => void;
 }
 
@@ -68,7 +69,7 @@ function TripCard({ trip, hailer, userMap }: TripCardProps) {
   );
 }
 
-export default function TripGrid({ hailer, customerId, onCount }: Props) {
+export default function TripGrid({ hailer, customerId, refreshKey, onCount }: Props) {
   const { user } = useApp();
   const [trips, setTrips] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +94,7 @@ export default function TripGrid({ hailer, customerId, onCount }: Props) {
       }
     })();
     return () => { cancelled = true; };
-  }, [hailer, customerId]);
+  }, [hailer, customerId, refreshKey]);
 
   if (loading) return <Center py={12}><Spinner /></Center>;
   if (error) return <Center py={12}><Text color="red.500">{error}</Text></Center>;

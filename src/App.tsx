@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Badge,
   Box,
+  Button,
   Container,
   Heading,
   HStack,
@@ -54,6 +55,7 @@ export default function App() {
   const { hailer, api, inside, settings } = useApp();
   const { setColorMode } = useColorMode();
   const [customerId, setCustomerId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [assetCount, setAssetCount] = useState<number | null>(null);
   const [ticketCount, setTicketCount] = useState<number | null>(null);
   const [contactCount, setContactCount] = useState<number | null>(null);
@@ -137,16 +139,21 @@ export default function App() {
             Customer Portal
           </Heading>
         </HStack>
-        <CustomerPicker
-          hailer={hailer}
-          selectedId={customerId}
-          onSelect={(id) => setCustomerId(id)}
-        />
+        <HStack spacing={3}>
+          <Button size="sm" variant="outline" onClick={() => setRefreshKey((k) => k + 1)}>
+            ↻ Refresh
+          </Button>
+          <CustomerPicker
+            hailer={hailer}
+            selectedId={customerId}
+            onSelect={(id) => setCustomerId(id)}
+          />
+        </HStack>
       </HStack>
 
       {customerId ? (
         <>
-          <CustomerHeader hailer={hailer} customerId={customerId} />
+          <CustomerHeader hailer={hailer} customerId={customerId} refreshKey={refreshKey} />
           <Tabs variant="soft-rounded" colorScheme="blue" isLazy>
             <TabList overflowX="auto" overflowY="hidden" sx={{ scrollbarWidth: 'none' }} pb={2}>
               <Tab><TabLabel label="Assets" count={assetCount} icon={CubeIcon} /></Tab>
@@ -160,28 +167,28 @@ export default function App() {
             </TabList>
             <TabPanels>
               <TabPanel px={0} pt={4}>
-                <AssetGrid hailer={hailer} customerId={customerId} onCount={setAssetCount} />
+                <AssetGrid hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setAssetCount} />
               </TabPanel>
               <TabPanel px={0} pt={4}>
-                <TicketsGrid hailer={hailer} customerId={customerId} onCount={setTicketCount} />
+                <TicketsGrid hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setTicketCount} />
               </TabPanel>
               <TabPanel px={0} pt={4}>
-                <ContactsList hailer={hailer} customerId={customerId} onCount={setContactCount} />
+                <ContactsList hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setContactCount} />
               </TabPanel>
               <TabPanel px={0} pt={4}>
-                <TripGrid hailer={hailer} customerId={customerId} onCount={setTripCount} />
+                <TripGrid hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setTripCount} />
               </TabPanel>
               <TabPanel px={0} pt={4}>
-                <OpportunitiesGrid hailer={hailer} customerId={customerId} onCount={setOppCount} />
+                <OpportunitiesGrid hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setOppCount} />
               </TabPanel>
               <TabPanel px={0} pt={4}>
-                <ManikinPCGrid hailer={hailer} customerId={customerId} onCount={setManikinpcCount} />
+                <ManikinPCGrid hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setManikinpcCount} />
               </TabPanel>
               <TabPanel px={0} pt={4}>
-                <RentalGrid hailer={hailer} customerId={customerId} onCount={setRentalCount} />
+                <RentalGrid hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setRentalCount} />
               </TabPanel>
               <TabPanel px={0} pt={4}>
-                <OnlineOrderGrid hailer={hailer} customerId={customerId} onCount={setOnlineOrderCount} />
+                <OnlineOrderGrid hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setOnlineOrderCount} />
               </TabPanel>
             </TabPanels>
           </Tabs>

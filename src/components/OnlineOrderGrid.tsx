@@ -11,6 +11,7 @@ import { PackageIcon } from './Icons';
 interface Props {
   hailer: HailerApi;
   customerId: string;
+  refreshKey?: number;
   onCount?: (n: number) => void;
 }
 
@@ -21,7 +22,7 @@ const PHASE_LABELS: Record<string, { label: string; color: string; accent: strin
   [Online_Orders_PhaseIds.fulfilled_ff2]: { label: 'Fulfilled', color: 'green', accent: 'green.400' },
 };
 
-export default function OnlineOrderGrid({ hailer, customerId, onCount }: Props) {
+export default function OnlineOrderGrid({ hailer, customerId, refreshKey, onCount }: Props) {
   const [orders, setOrders] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export default function OnlineOrderGrid({ hailer, customerId, onCount }: Props) 
       }
     })();
     return () => { cancelled = true; };
-  }, [hailer, customerId]);
+  }, [hailer, customerId, refreshKey]);
 
   if (loading) return <Center py={12}><Spinner /></Center>;
   if (error) return <Center py={12}><Text color="red.500">{error}</Text></Center>;

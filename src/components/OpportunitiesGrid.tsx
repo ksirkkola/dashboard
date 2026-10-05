@@ -21,6 +21,7 @@ import { TrendingIcon } from './Icons';
 interface Props {
   hailer: HailerApi;
   customerId: string;
+  refreshKey?: number;
   onCount?: (n: number) => void;
 }
 
@@ -34,7 +35,7 @@ const PHASE_LABELS: Record<string, { label: string; color: string; accent: strin
   [Opportunity_PhaseIds.closed_lost_0ee]: { label: 'Lost', color: 'red', accent: 'red.400' },
 };
 
-export default function OpportunitiesGrid({ hailer, customerId, onCount }: Props) {
+export default function OpportunitiesGrid({ hailer, customerId, refreshKey, onCount }: Props) {
   const [opps, setOpps] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +61,7 @@ export default function OpportunitiesGrid({ hailer, customerId, onCount }: Props
     return () => {
       cancelled = true;
     };
-  }, [hailer, customerId]);
+  }, [hailer, customerId, refreshKey]);
 
   if (loading) return <Center py={12}><Spinner /></Center>;
   if (error) return <Center py={12}><Text color="red.500">{error}</Text></Center>;

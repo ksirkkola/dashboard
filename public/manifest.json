@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Reordered tabs \u2014 Trips moved from last to right after Contacts. New order: Assets, Support, Contacts, Trips, Opportunities, ManikinPC, Rentals, Online Orders.",
-  "version": "1.8.1",
+  "versionDescription": "Added a manual '\u21bb Refresh' button next to the customer picker \u2014 re-fetches data in the header and all 8 tabs without resetting which customer is selected (the two are independent state, unlike reloading the page). No automatic background refresh, by design \u2014 just the button.",
+  "version": "1.9.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }

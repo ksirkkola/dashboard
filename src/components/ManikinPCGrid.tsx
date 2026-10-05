@@ -17,6 +17,7 @@ import { CreditCardIcon } from './Icons';
 interface Props {
   hailer: HailerApi;
   customerId: string;
+  refreshKey?: number;
   onCount?: (n: number) => void;
 }
 
@@ -32,7 +33,7 @@ const PHASE_LABELS: Record<string, { label: string; color: string; accent: strin
 // field takes over (support/technical context), matching the field's own description.
 const PRE_SALE_PHASES = new Set<string>([ManikinPC_PhaseIds.prospect_ab0, ManikinPC_PhaseIds.contacted_55c]);
 
-export default function ManikinPCGrid({ hailer, customerId, onCount }: Props) {
+export default function ManikinPCGrid({ hailer, customerId, refreshKey, onCount }: Props) {
   const { user } = useApp();
   const toast = useToast();
   const [records, setRecords] = useState<Activity[]>([]);
@@ -60,7 +61,7 @@ export default function ManikinPCGrid({ hailer, customerId, onCount }: Props) {
     (async () => { await load(); if (cancelled) return; })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hailer, customerId]);
+  }, [hailer, customerId, refreshKey]);
 
   // Create a quote/install support ticket for this ManikinPC relationship — mirrors the
   // Asset card's shortcut. The native create dialog doesn't reliably accept an arbitrary
