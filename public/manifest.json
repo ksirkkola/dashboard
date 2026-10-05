@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Support tab: added a collapsed 'Closed' section at the bottom (same pattern as Trips) so Done tickets don't clutter the active list. Also added the ticket code (e.g. E0012) to each card, shown prominently at the top \u2014 previously only the subject-line name was visible, not the actual reference number people use when talking about a ticket.",
-  "version": "1.8.0",
+  "versionDescription": "Reordered tabs \u2014 Trips moved from last to right after Contacts. New order: Assets, Support, Contacts, Trips, Opportunities, ManikinPC, Rentals, Online Orders.",
+  "version": "1.8.1",
   "appId": "6a147675cfcc9eb20cb6297e"
 }

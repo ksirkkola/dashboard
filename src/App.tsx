@@ -152,11 +152,11 @@ export default function App() {
               <Tab><TabLabel label="Assets" count={assetCount} icon={CubeIcon} /></Tab>
               <Tab><TabLabel label="Support" count={ticketCount} icon={TicketIcon} /></Tab>
               <Tab><TabLabel label="Contacts" count={contactCount} icon={UsersIcon} /></Tab>
+              <Tab><TabLabel label="Trips" count={tripCount} icon={MapPinIcon} /></Tab>
               <Tab><TabLabel label="Opportunities" count={oppCount} icon={TrendingIcon} /></Tab>
               <Tab><TabLabel label="ManikinPC" count={manikinpcCount} icon={CreditCardIcon} /></Tab>
               <Tab><TabLabel label="Rentals" count={rentalCount} icon={TruckIcon} /></Tab>
               <Tab><TabLabel label="Online Orders" count={onlineOrderCount} icon={PackageIcon} /></Tab>
-              <Tab><TabLabel label="Trips" count={tripCount} icon={MapPinIcon} /></Tab>
             </TabList>
             <TabPanels>
               <TabPanel px={0} pt={4}>
@@ -169,6 +169,9 @@ export default function App() {
                 <ContactsList hailer={hailer} customerId={customerId} onCount={setContactCount} />
               </TabPanel>
               <TabPanel px={0} pt={4}>
+                <TripGrid hailer={hailer} customerId={customerId} onCount={setTripCount} />
+              </TabPanel>
+              <TabPanel px={0} pt={4}>
                 <OpportunitiesGrid hailer={hailer} customerId={customerId} onCount={setOppCount} />
               </TabPanel>
               <TabPanel px={0} pt={4}>
@@ -179,9 +182,6 @@ export default function App() {
               </TabPanel>
               <TabPanel px={0} pt={4}>
                 <OnlineOrderGrid hailer={hailer} customerId={customerId} onCount={setOnlineOrderCount} />
-              </TabPanel>
-              <TabPanel px={0} pt={4}>
-                <TripGrid hailer={hailer} customerId={customerId} onCount={setTripCount} />
               </TabPanel>
             </TabPanels>
           </Tabs>
