@@ -69,7 +69,7 @@ export function firstFileId(raw: unknown): string | null {
   return null;
 }
 
-export function hailerImageUrl(fileId: string, size: 'hires' | 'thumb' = 'hires'): string {
+export function hailerImageUrl(fileId: string, size: 'hires' | 'lores' | 'thumb' = 'hires'): string {
   return `https://api.hailer.com/image/${size}/${fileId}`;
 }
 

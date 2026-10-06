@@ -1,9 +1,8 @@
 import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
 import {
   Badge,
+  Box,
   Button,
-  CardBody,
-  CardHeader,
   Heading,
   Text,
   VStack,
@@ -107,84 +106,87 @@ export default function AssetCard({ hailer, activity, customerId, imageFileId }:
     <ClickableCard
       accentColor={accent}
       onOpen={() => void hailer.ui.activity.open(activity._id)}
+      p={0}
+      overflow="hidden"
     >
-      <CardHeader pb={1}>
+      <HStack align="stretch" spacing={0}>
         {imageFileId && (
-          <HailerImage
-            hailerImageUrl={hailerImageUrl(imageFileId, 'thumb')}
-            fallbackIcon={false}
-            objectFit="cover"
-            w="100%"
-            h="100px"
-            borderRadius="md"
-            mb={2}
-            alt={productFamily ?? 'Asset'}
-          />
-        )}
-        <Heading fontSize="md" noOfLines={1}>
-          {assetName ?? activity.name ?? '—'}
-        </Heading>
-        {(productFamily || productName) && (
-          <Text fontSize="xs" color="subtleText" mt={0.5} noOfLines={2}>
-            {[productFamily, productName].filter(Boolean).join(' · ')}
-          </Text>
-        )}
-        {(warrantyExpired || calibrationOverdue) && (
-          <HStack mt={2} spacing={1} flexWrap="wrap">
-            {warrantyExpired && (
-              <Badge colorScheme="red" fontSize="2xs">
-                Warranty Expired
-              </Badge>
-            )}
-            {calibrationOverdue && (
-              <Badge colorScheme="orange" fontSize="2xs">
-                Calibration Overdue
-              </Badge>
-            )}
-          </HStack>
-        )}
-      </CardHeader>
-      <CardBody pt={2}>
-        <VStack spacing={1} align="stretch">
-          {purchaseDateMs != null && (
-            <FieldRow label="Purchased" value={formatDate(purchaseDateMs)} />
-          )}
-          {warrantyExpiresMs != null && (
-            <FieldRow
-              label="Warranty"
-              value={formatDate(warrantyExpiresMs)}
-              alert={warrantyExpired}
+          <Box w="110px" flexShrink={0} bg="white" alignSelf="stretch">
+            <HailerImage
+              hailerImageUrl={hailerImageUrl(imageFileId, 'lores')}
+              fallbackIcon={false}
+              objectFit="contain"
+              w="100%"
+              h="100%"
+              minH="140px"
+              alt={productFamily ?? 'Asset'}
             />
+          </Box>
+        )}
+        <Box flex="1" minW={0} p={3}>
+          <Heading fontSize="md" noOfLines={1}>
+            {assetName ?? activity.name ?? '—'}
+          </Heading>
+          {(productFamily || productName) && (
+            <Text fontSize="xs" color="subtleText" mt={0.5} noOfLines={2}>
+              {[productFamily, productName].filter(Boolean).join(' · ')}
+            </Text>
           )}
-          {calibrationDueMs != null && (
-            <FieldRow
-              label="Calibration"
-              value={formatDate(calibrationDueMs)}
-              alert={calibrationOverdue}
-            />
+          {(warrantyExpired || calibrationOverdue) && (
+            <HStack mt={2} spacing={1} flexWrap="wrap">
+              {warrantyExpired && (
+                <Badge colorScheme="red" fontSize="2xs">
+                  Warranty Expired
+                </Badge>
+              )}
+              {calibrationOverdue && (
+                <Badge colorScheme="orange" fontSize="2xs">
+                  Calibration Overdue
+                </Badge>
+              )}
+            </HStack>
           )}
-          {assetAge != null && (
-            <FieldRow
-              label="Age"
-              value={`${assetAge} year${assetAge === 1 ? '' : 's'}`}
-            />
-          )}
-          {purchaseDateMs == null &&
-            warrantyExpiresMs == null &&
-            calibrationDueMs == null &&
-            assetAge == null && (
-              <Text fontSize="sm" color="subtleText">
-                No details available
-              </Text>
+          <VStack spacing={1} align="stretch" mt={2}>
+            {purchaseDateMs != null && (
+              <FieldRow label="Purchased" value={formatDate(purchaseDateMs)} />
             )}
-        </VStack>
-        <Button
-          mt={3} size="xs" variant="outline" isLoading={creating}
-          onClick={createSupportTicket}
-        >
-          + Support Ticket
-        </Button>
-      </CardBody>
+            {warrantyExpiresMs != null && (
+              <FieldRow
+                label="Warranty"
+                value={formatDate(warrantyExpiresMs)}
+                alert={warrantyExpired}
+              />
+            )}
+            {calibrationDueMs != null && (
+              <FieldRow
+                label="Calibration"
+                value={formatDate(calibrationDueMs)}
+                alert={calibrationOverdue}
+              />
+            )}
+            {assetAge != null && (
+              <FieldRow
+                label="Age"
+                value={`${assetAge} year${assetAge === 1 ? '' : 's'}`}
+              />
+            )}
+            {purchaseDateMs == null &&
+              warrantyExpiresMs == null &&
+              calibrationDueMs == null &&
+              assetAge == null && (
+                <Text fontSize="sm" color="subtleText">
+                  No details available
+                </Text>
+              )}
+          </VStack>
+          <Button
+            mt={3} size="xs" variant="outline" isLoading={creating}
+            onClick={createSupportTicket}
+          >
+            + Support Ticket
+          </Button>
+        </Box>
+      </HStack>
     </ClickableCard>
   );
 }
