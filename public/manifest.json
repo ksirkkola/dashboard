@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Added a manual '\u21bb Refresh' button next to the customer picker \u2014 re-fetches data in the header and all 8 tabs without resetting which customer is selected (the two are independent state, unlike reloading the page). No automatic background refresh, by design \u2014 just the button.",
-  "version": "1.9.0",
+  "versionDescription": "Asset cards now show a representative photo for their product family (e.g. the '431-iSGHP' asset shows the actual iSGHP unit) \u2014 helps identify assets by sight instead of by model number alone. Backed by a new small reference dataset (one photo per product family, not per physical unit) \u2014 cards for families without a photo yet just show no image, nothing breaks.",
+  "version": "1.9.1",
   "appId": "6a147675cfcc9eb20cb6297e"
 }

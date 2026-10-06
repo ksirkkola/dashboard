@@ -16,12 +16,17 @@ import {
 } from '../../../../workspace/enums';
 import { WORKFLOWS } from '../config';
 import ClickableCard from './ClickableCard';
-import { formatDate } from '../hailer/api-helpers';
+import { formatDate, hailerImageUrl } from '../hailer/api-helpers';
+import { HailerImage } from './HailerImage';
 
 interface AssetCardProps {
   hailer: HailerApi;
   activity: Activity;
   customerId?: string;
+  // Generic photo for this asset's product family (e.g. "506-Hand") —
+  // looked up once in AssetGrid against the small Asset Type Images
+  // reference dataset, not unique per physical unit.
+  imageFileId?: string;
 }
 
 function isOverdue(unixMs: number): boolean {
@@ -52,7 +57,7 @@ function FieldRow({ label, value, alert }: FieldRowProps) {
   );
 }
 
-export default function AssetCard({ hailer, activity, customerId }: AssetCardProps) {
+export default function AssetCard({ hailer, activity, customerId, imageFileId }: AssetCardProps) {
   const toast = useToast();
   const [creating, setCreating] = useState(false);
   const f = activity.fields ?? {};
@@ -104,6 +109,18 @@ export default function AssetCard({ hailer, activity, customerId }: AssetCardPro
       onOpen={() => void hailer.ui.activity.open(activity._id)}
     >
       <CardHeader pb={1}>
+        {imageFileId && (
+          <HailerImage
+            hailerImageUrl={hailerImageUrl(imageFileId, 'thumb')}
+            fallbackIcon={false}
+            objectFit="cover"
+            w="100%"
+            h="100px"
+            borderRadius="md"
+            mb={2}
+            alt={productFamily ?? 'Asset'}
+          />
+        )}
         <Heading fontSize="md" noOfLines={1}>
           {assetName ?? activity.name ?? '—'}
         </Heading>

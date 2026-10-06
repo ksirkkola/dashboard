@@ -9,6 +9,7 @@ import {
   Rentals_PhaseIds,
   Online_Orders_PhaseIds,
   TRIPS_IHS_PhaseIds,
+  Asset_Type_Images_PhaseIds,
 } from '../../../workspace/enums';
 
 // TODO: Replace with dynamic identity resolution (SSO / URL param / app config).
@@ -25,6 +26,7 @@ export const WORKFLOWS = {
   rentals: WorkflowIds.rentals_0cf,
   onlineOrders: WorkflowIds.online_orders_703,
   trips: WorkflowIds.trips_ihs_b03,
+  assetTypeImages: WorkflowIds.asset_type_images_e1c,
 };
 
 export const PHASES = {
@@ -37,4 +39,5 @@ export const PHASES = {
   rentals: Object.values(Rentals_PhaseIds) as string[],
   onlineOrders: Object.values(Online_Orders_PhaseIds) as string[],
   trips: Object.values(TRIPS_IHS_PhaseIds) as string[],
+  assetTypeImages: [Asset_Type_Images_PhaseIds.new_phase_e1b],
 };

@@ -56,6 +56,23 @@ export function filterByLink(
   });
 }
 
+// A file-modifier field's value is a JSON-stringified array of file IDs.
+// Returns the first one, or null if the field is empty/unset.
+export function firstFileId(raw: unknown): string | null {
+  if (!raw || typeof raw !== 'string') return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) return String(parsed[0]);
+  } catch {
+    // not JSON — ignore
+  }
+  return null;
+}
+
+export function hailerImageUrl(fileId: string, size: 'hires' | 'thumb' = 'hires'): string {
+  return `https://api.hailer.com/image/${size}/${fileId}`;
+}
+
 export function formatDate(unixMs: number | undefined | null): string {
   if (unixMs == null) return '—';
   return new Intl.DateTimeFormat(undefined, {
