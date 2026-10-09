@@ -1,8 +1,10 @@
 import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
 import {
   Avatar,
+  Button,
   CardBody,
   Center,
+  Flex,
   Heading,
   HStack,
   Link,
@@ -30,6 +32,8 @@ export default function ContactsList({ hailer, customerId, refreshKey, onCount }
   const [contacts, setContacts] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,14 +55,44 @@ export default function ContactsList({ hailer, customerId, refreshKey, onCount }
     return () => {
       cancelled = true;
     };
-  }, [hailer, customerId, refreshKey]);
+  }, [hailer, customerId, refreshKey, reloadTick]);
+
+  // Opens Hailer's Contact Person form with this customer pre-linked; reloads the list once saved.
+  async function addContact() {
+    setCreating(true);
+    try {
+      const created = await hailer.ui.activity.create(WORKFLOWS.contactPersons, {
+        phaseId: PHASES.contactPersons[0],
+        fields: { [Contact_persons_FieldIds.company_8e4]: customerId },
+      });
+      if (created) setReloadTick((t) => t + 1);
+    } catch (err) {
+      setError((err as HailerError).msg ?? 'Could not open the new contact form');
+    }
+    setCreating(false);
+  }
+
+  const addButton = (
+    <Flex justify="flex-end" mb={4}>
+      <Button size="sm" colorScheme="blue" isLoading={creating} onClick={() => void addContact()}>
+        + Add new contact
+      </Button>
+    </Flex>
+  );
 
   if (loading) return <Center py={12}><Spinner /></Center>;
   if (error) return <Center py={12}><Text color="red.500">{error}</Text></Center>;
   if (contacts.length === 0)
-    return <EmptyState icon={UsersIcon} text="No contacts on file for this customer." />;
+    return (
+      <>
+        {addButton}
+        <EmptyState icon={UsersIcon} text="No contacts on file for this customer." />
+      </>
+    );
 
   return (
+    <>
+    {addButton}
     <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
       {contacts.map((c) => {
         const f = c.fields ?? {};
@@ -108,5 +142,6 @@ export default function ContactsList({ hailer, customerId, refreshKey, onCount }
         );
       })}
     </SimpleGrid>
+    </>
   );
 }

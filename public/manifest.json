@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Fixed asset photos being unrecognizable \u2014 full-body product shots were squeezed into a short 100px banner with a hard crop (cutting off the head on manikins), and used the server's pre-cropped square 'thumb' size on top of that. Switched to the uncropped 'lores' image fit with objectFit=contain, and moved the photo to the left side of the card (was stacked on top) with the name/details on the right \u2014 the whole product is visible now, not just a cropped middle section.",
-  "version": "1.9.2",
+  "versionDescription": "Contacts tab: added a + Add new contact button that opens the Contact Person form with the customer already linked; the list refreshes after saving.",
+  "version": "1.10.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
