@@ -67,7 +67,8 @@ export default function AssetCard({ hailer, activity, customerId, imageFileId }:
   const purchaseDateMs = f[Assets_FieldIds.purchase_date_e8b] as number | undefined;
   const warrantyExpiresMs = f[Assets_FieldIds.warranty_expires_c05] as number | undefined;
   const calibrationDueMs = f[Assets_FieldIds.calibration_due_f5e] as number | undefined;
-  const assetAge = f[Assets_FieldIds.asset_age_d2b] as number | undefined;
+  // Asset Age is calculated text from Actual Ship Date (e.g. "11 years 4 months").
+  const assetAge = f[Assets_FieldIds.asset_age_d2b] as string | undefined;
 
   const warrantyExpired = warrantyExpiresMs != null && isOverdue(warrantyExpiresMs);
   const calibrationOverdue = calibrationDueMs != null && isOverdue(calibrationDueMs);
@@ -167,7 +168,7 @@ export default function AssetCard({ hailer, activity, customerId, imageFileId }:
             {assetAge != null && (
               <FieldRow
                 label="Age"
-                value={`${assetAge} year${assetAge === 1 ? '' : 's'}`}
+                value={String(assetAge)}
               />
             )}
             {purchaseDateMs == null &&

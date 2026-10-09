@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Assets tab: the Support Ticket and Additional Info buttons are now stacked full-width so they no longer overlap on narrow cards.",
-  "version": "1.10.2",
+  "versionDescription": "Assets tab: Age now shows as calculated (from Actual Ship Date) instead of having an extra \"years\" appended.",
+  "version": "1.10.3",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
