@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Contacts tab: added a + Add new contact button that opens the Contact Person form with the customer already linked; the list refreshes after saving.",
-  "version": "1.10.0",
+  "versionDescription": "Assets tab: each asset card has an Additional Info button that opens the asset on its Discussion tab.",
+  "version": "1.10.1",
   "appId": "6a147675cfcc9eb20cb6297e"
 }

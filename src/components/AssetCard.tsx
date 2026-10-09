@@ -179,12 +179,20 @@ export default function AssetCard({ hailer, activity, customerId, imageFileId }:
                 </Text>
               )}
           </VStack>
-          <Button
-            mt={3} size="xs" variant="outline" isLoading={creating}
-            onClick={createSupportTicket}
-          >
-            + Support Ticket
-          </Button>
+          <HStack mt={3} spacing={2}>
+            <Button size="xs" variant="outline" isLoading={creating} onClick={createSupportTicket}>
+              + Support Ticket
+            </Button>
+            <Button
+              size="xs" variant="outline"
+              onClick={(e: MouseEvent) => {
+                e.stopPropagation();
+                void hailer.ui.activity.open(activity._id, { tab: 'discussion' });
+              }}
+            >
+              Additional Info
+            </Button>
+          </HStack>
         </Box>
       </HStack>
     </ClickableCard>
