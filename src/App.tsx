@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Container,
+  Flex,
   Heading,
   HStack,
   Icon,
@@ -17,7 +18,7 @@ import {
   useColorMode,
 } from '@chakra-ui/react';
 import AssetGrid from './components/AssetGrid';
-import CustomerPicker from './components/CustomerPicker';
+import CustomerList from './components/CustomerList';
 import CustomerHeader from './components/CustomerHeader';
 import TicketsGrid from './components/TicketsGrid';
 import ContactsList from './components/ContactsList';
@@ -127,7 +128,7 @@ export default function App() {
   if (!hailer) return null;
 
   return (
-    <Container maxW="container.xl" py={6}>
+    <Container maxW="container.2xl" py={6}>
       <HStack justify="space-between" align="center" mb={6}>
         <HStack spacing={2}>
           <Heading
@@ -143,14 +144,19 @@ export default function App() {
           <Button size="sm" variant="outline" onClick={() => setRefreshKey((k) => k + 1)}>
             ↻ Refresh
           </Button>
-          <CustomerPicker
-            hailer={hailer}
-            selectedId={customerId}
-            onSelect={(id) => setCustomerId(id)}
-          />
         </HStack>
       </HStack>
 
+      <Flex gap={6} align="flex-start" wrap={{ base: 'wrap', lg: 'nowrap' }}>
+        <Box w={{ base: '100%', lg: '280px' }} flexShrink={0}>
+          <CustomerList
+            hailer={hailer}
+            selectedId={customerId}
+            onSelect={(id) => setCustomerId(id)}
+            refreshKey={refreshKey}
+          />
+        </Box>
+        <Box flex="1" minW={0} w="100%">
       {customerId ? (
         <>
           <CustomerHeader hailer={hailer} customerId={customerId} refreshKey={refreshKey} />
@@ -196,6 +202,8 @@ export default function App() {
       ) : (
         <Text color="subtleText">Select a customer to view details.</Text>
       )}
+        </Box>
+      </Flex>
     </Container>
   );
 }
