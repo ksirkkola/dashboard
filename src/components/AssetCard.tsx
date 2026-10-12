@@ -17,6 +17,7 @@ import { WORKFLOWS } from '../config';
 import ClickableCard from './ClickableCard';
 import { formatDate, hailerImageUrl } from '../hailer/api-helpers';
 import { HailerImage } from './HailerImage';
+import AssetDocuments from './AssetDocuments';
 
 interface AssetCardProps {
   hailer: HailerApi;
@@ -59,6 +60,7 @@ function FieldRow({ label, value, alert }: FieldRowProps) {
 export default function AssetCard({ hailer, activity, customerId, imageFileId }: AssetCardProps) {
   const toast = useToast();
   const [creating, setCreating] = useState(false);
+  const [docsOpen, setDocsOpen] = useState(false);
   const f = activity.fields ?? {};
 
   const assetName = f[Assets_FieldIds.asset_name_8c8] as string | undefined;
@@ -193,7 +195,22 @@ export default function AssetCard({ hailer, activity, customerId, imageFileId }:
             >
               Additional Info
             </Button>
+            <Button
+              size="xs" variant="outline" w="100%"
+              onClick={(e: MouseEvent) => { e.stopPropagation(); setDocsOpen(true); }}
+            >
+              Documents
+            </Button>
           </VStack>
+          {docsOpen && (
+            <AssetDocuments
+              hailer={hailer}
+              assetId={activity._id}
+              assetName={assetName ?? activity.name ?? 'Asset'}
+              isOpen
+              onClose={() => setDocsOpen(false)}
+            />
+          )}
         </Box>
       </HStack>
     </ClickableCard>
