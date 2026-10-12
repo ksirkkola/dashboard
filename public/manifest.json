@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Assets tab: Age now shows as calculated (from Actual Ship Date) instead of having an extra \"years\" appended.",
-  "version": "1.10.3",
+  "versionDescription": "Customer picker is now a searchable dropdown in the style of the HR Employee Directory: search box, clickable rows with the selected customer highlighted, and an x of N count.",
+  "version": "1.10.4",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
