@@ -1,6 +1,7 @@
 import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
 import {
   Avatar,
+  Badge,
   Button,
   CardBody,
   Center,
@@ -102,6 +103,8 @@ export default function ContactsList({ hailer, customerId, refreshKey, onCount }
         const email = f[Contact_persons_FieldIds.email_8c5] as string | undefined;
         const phone = f[Contact_persons_FieldIds.phone_8e2] as string | undefined;
         const fullName = `${first} ${last}`.trim() || c.name;
+        // Left the company: still shown, with a red DNC mark (do not contact).
+        const dnc = f[Contact_persons_FieldIds.contact_status_adf] === 'No Longer at Company';
 
         return (
           <ClickableCard
@@ -112,7 +115,14 @@ export default function ContactsList({ hailer, customerId, refreshKey, onCount }
               <HStack spacing={3} align="start">
                 <Avatar name={fullName} size="sm" />
                 <VStack align="stretch" spacing={0.5} flex="1" minW={0}>
-                  <Heading fontSize="sm" noOfLines={1}>{fullName}</Heading>
+                  <HStack spacing={2} align="center">
+                    <Heading fontSize="sm" noOfLines={1}>{fullName}</Heading>
+                    {dnc && (
+                      <Badge colorScheme="red" variant="solid" fontSize="2xs" flexShrink={0} title="No longer at the company: do not contact">
+                        DNC
+                      </Badge>
+                    )}
+                  </HStack>
                   {title && <Text fontSize="xs" color="subtleText" noOfLines={1}>{title}</Text>}
                   {email && (
                     <Link

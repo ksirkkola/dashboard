@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Customers with Client Status Inactive are hidden from the customer list, and so are their assets. The records themselves are untouched.",
-  "version": "1.13.0",
+  "versionDescription": "Contacts marked No Longer at Company stay visible and now show a red DNC badge next to their name.",
+  "version": "1.14.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
