@@ -103,6 +103,8 @@ export default function ContactsList({ hailer, customerId, refreshKey, onCount }
         const email = f[Contact_persons_FieldIds.email_8c5] as string | undefined;
         const phone = f[Contact_persons_FieldIds.phone_8e2] as string | undefined;
         const fullName = `${first} ${last}`.trim() || c.name;
+        const salutation = f[Contact_persons_FieldIds.salutation_f47] as string | undefined;
+        const displayName = salutation ? `${salutation} ${fullName}` : fullName;
         // Left the company: still shown, with a red DNC mark (do not contact).
         const dnc = f[Contact_persons_FieldIds.contact_status_adf] === 'No Longer at Company';
 
@@ -115,7 +117,7 @@ export default function ContactsList({ hailer, customerId, refreshKey, onCount }
               <HStack spacing={3} align="start">
                 <Avatar name={fullName} size="sm" />
                 <VStack align="stretch" spacing={0.5} flex="1" minW={0}>
-                  <Heading fontSize="sm" noOfLines={1}>{fullName}</Heading>
+                  <Heading fontSize="sm" noOfLines={1}>{displayName}</Heading>
                   {title && <Text fontSize="xs" color="subtleText" noOfLines={1}>{title}</Text>}
                   {email && (
                     <Link
