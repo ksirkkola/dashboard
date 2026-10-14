@@ -2,6 +2,7 @@ import { Activity, HailerApi } from '@hailer/app-sdk';
 import {
   Avatar,
   Box,
+  Button,
   Flex,
   Heading,
   HStack,
@@ -121,7 +122,7 @@ export default function CustomerHeader({ hailer, customerId, refreshKey }: Props
   if (paymentTerms)
     stats.push({ label: 'Payment Terms', value: paymentTerms, icon: CreditCardIcon, color: 'pink.400' });
   if (accountType && accountType !== 'No')
-    stats.push({ label: 'Account', value: accountType, icon: AwardIcon, color: 'yellow.500' });
+    stats.push({ label: 'Agent Account', value: accountType, icon: AwardIcon, color: 'yellow.500' });
   if (isoLab && isoLab !== 'No')
     stats.push({ label: 'ISO 17025', value: isoLab, icon: AwardIcon, color: 'purple.400' });
   if (totalWon != null && totalWon > 0)
@@ -215,6 +216,14 @@ export default function CustomerHeader({ hailer, customerId, refreshKey }: Props
                 </VStack>
               </HStack>
             )}
+            <Button
+              size="sm"
+              variant="outline"
+              flexShrink={0}
+              onClick={(e) => { e.stopPropagation(); void hailer.ui.activity.open(customer._id, { tab: 'discussion' }); }}
+            >
+              Discussion
+            </Button>
           </HStack>
 
           {stats.length > 0 && (

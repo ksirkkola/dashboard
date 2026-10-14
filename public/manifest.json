@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Assets tab: new Documents button on each asset card. Lists the asset files, lets you add PDFs (attached directly to the asset), download them, and rename them (saved as a new copy under the new name; the old copy is removed from the asset).",
-  "version": "1.11.0",
+  "versionDescription": "Customer header: the Account tile now reads Agent Account, and a Discussion button opens the customer's discussion.",
+  "version": "1.12.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
