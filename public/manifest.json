@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Contacts marked No Longer at Company stay visible and now show a red DNC badge next to their name.",
-  "version": "1.14.0",
+  "versionDescription": "Active customers and prospects are now distinguishable: prospects get an orange Prospect badge in the customer list (with a prospect count under it), and the customer header has a Status tile showing Active or Prospect.",
+  "version": "1.15.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }

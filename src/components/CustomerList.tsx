@@ -1,5 +1,5 @@
 import { Activity, HailerApi } from '@hailer/app-sdk';
-import { Box, Input, Skeleton, Text, VStack, useColorModeValue } from '@chakra-ui/react';
+import { Badge, Box, HStack, Input, Skeleton, Text, VStack, useColorModeValue } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import { Customers_FieldIds } from '../../../../workspace/enums';
 import { WORKFLOWS, PHASES } from '../config';
@@ -46,6 +46,8 @@ export default function CustomerList({ hailer, selectedId, onSelect, refreshKey 
     return typeof v === 'string' ? v : '';
   };
 
+  const isProspect = (c: Activity) => c.fields?.[Customers_FieldIds.client_status_7d2] === 'Prospect';
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return customers;
@@ -76,7 +78,10 @@ export default function CustomerList({ hailer, selectedId, onSelect, refreshKey 
               borderBottom="1px" borderColor={borderColor}
               sx={{ '&:last-child': { borderBottom: 'none' } }}
             >
-              <Text fontSize="sm" fontWeight={c._id === selectedId ? 'semibold' : 'medium'} noOfLines={1}>{c.name}</Text>
+              <HStack spacing={2} align="center">
+                <Text fontSize="sm" fontWeight={c._id === selectedId ? 'semibold' : 'medium'} noOfLines={1}>{c.name}</Text>
+                {isProspect(c) && <Badge colorScheme="orange" variant="subtle" fontSize="2xs" flexShrink={0}>Prospect</Badge>}
+              </HStack>
               <Text fontSize="xs" color={mutedText} noOfLines={1}>{countryOf(c) || '—'}</Text>
             </Box>
           ))
@@ -84,6 +89,7 @@ export default function CustomerList({ hailer, selectedId, onSelect, refreshKey 
       </VStack>
       <Text fontSize="xs" color={mutedText} mt={2}>
         {filtered.length} of {customers.length} customer{customers.length === 1 ? '' : 's'}
+        {customers.some(isProspect) ? ` (${customers.filter(isProspect).length} prospects)` : ''}
       </Text>
     </Box>
   );

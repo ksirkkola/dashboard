@@ -91,6 +91,7 @@ export default function CustomerHeader({ hailer, customerId, refreshKey }: Props
   const streetAddress = f[Customers_FieldIds.company_street_address_d68] as string | undefined;
   const city = f[Customers_FieldIds.company_city_897] as string | undefined;
   const country = f[Customers_FieldIds.company_country_9a0] as string | undefined;
+  const clientStatus = f[Customers_FieldIds.client_status_7d2] as string | undefined;
   const industry = f[Customers_FieldIds.industry_2af] as string | undefined;
   const accountType = f[Customers_FieldIds.is_this_an_agent_client_0eb] as string | undefined;
   const isoLab = f[Customers_FieldIds.iso_17025_lab_a29] as string | undefined;
@@ -115,6 +116,8 @@ export default function CustomerHeader({ hailer, customerId, refreshKey }: Props
     : null;
 
   const stats: Stat[] = [];
+  if (clientStatus)
+    stats.push({ label: 'Status', value: clientStatus, icon: AwardIcon, color: clientStatus === 'Prospect' ? 'orange.400' : 'green.500' });
   if (address) stats.push({ label: 'Address', value: address, icon: MapPinIcon, color: 'red.400' });
   if (country) stats.push({ label: 'Country', value: country, icon: GlobeIcon, color: 'cyan.500' });
   if (industry) stats.push({ label: 'Industry', value: industry, icon: TagIcon, color: 'orange.400' });
