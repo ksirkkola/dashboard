@@ -1,7 +1,7 @@
 import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
 import {
   Avatar,
-  Badge,
+  Box,
   Button,
   CardBody,
   Center,
@@ -115,14 +115,7 @@ export default function ContactsList({ hailer, customerId, refreshKey, onCount }
               <HStack spacing={3} align="start">
                 <Avatar name={fullName} size="sm" />
                 <VStack align="stretch" spacing={0.5} flex="1" minW={0}>
-                  <HStack spacing={2} align="center">
-                    <Heading fontSize="sm" noOfLines={1}>{fullName}</Heading>
-                    {dnc && (
-                      <Badge colorScheme="red" variant="solid" fontSize="2xs" flexShrink={0} title="No longer at the company: do not contact">
-                        DNC
-                      </Badge>
-                    )}
-                  </HStack>
+                  <Heading fontSize="sm" noOfLines={1}>{fullName}</Heading>
                   {title && <Text fontSize="xs" color="subtleText" noOfLines={1}>{title}</Text>}
                   {email && (
                     <Link
@@ -148,6 +141,12 @@ export default function ContactsList({ hailer, customerId, refreshKey, onCount }
                 </VStack>
               </HStack>
             </CardBody>
+            {dnc && (
+              <Box bg="red.500" color="white" textAlign="center" py={2} px={3} borderBottomRadius="md">
+                <Text fontSize="md" fontWeight="extrabold" letterSpacing="widest" lineHeight="1.2">DNC</Text>
+                <Text fontSize="xs" lineHeight="1.2">Do not contact: no longer at the company</Text>
+              </Box>
+            )}
           </ClickableCard>
         );
       })}
