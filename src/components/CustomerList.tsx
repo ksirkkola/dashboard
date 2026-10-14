@@ -29,7 +29,10 @@ export default function CustomerList({ hailer, selectedId, onSelect, refreshKey 
     (async () => {
       const list = await fetchAllPhases(hailer, WORKFLOWS.customers, PHASES.customers);
       if (cancelled) return;
-      const sorted = [...list].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+      // Inactive customers (and with them their assets) are not shown on the dashboard. Their records are untouched.
+      const sorted = list
+        .filter((c) => c.fields?.[Customers_FieldIds.client_status_7d2] !== 'Inactive')
+        .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
       setCustomers(sorted);
       setLoading(false);
       if (!selectedId && sorted.length > 0) onSelect(sorted[0]._id, sorted[0].name);
