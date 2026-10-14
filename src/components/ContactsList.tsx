@@ -44,7 +44,14 @@ export default function ContactsList({ hailer, customerId, refreshKey, onCount }
       try {
         const all = await fetchAllPhases(hailer, WORKFLOWS.contactPersons, PHASES.contactPersons);
         if (cancelled) return;
-        const mine = filterByLink(all, Contact_persons_FieldIds.company_8e4, customerId);
+        const nameKey = (a: Activity) => {
+          const fl = a.fields ?? {};
+          const last = (fl[Contact_persons_FieldIds.last_name_8e1] as string | undefined) ?? '';
+          const first = (fl[Contact_persons_FieldIds.first_name_8e0] as string | undefined) ?? '';
+          return last || first ? `${last} ${first}`.trim() : (a.name ?? '');
+        };
+        const mine = filterByLink(all, Contact_persons_FieldIds.company_8e4, customerId)
+          .sort((a, b) => nameKey(a).localeCompare(nameKey(b), undefined, { sensitivity: 'base' }));
         setContacts(mine);
         onCount?.(mine.length);
       } catch (err) {

@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Contact cards show the salutation (Mr., Ms., Mrs., Dr., Prof.) in front of the name when the contact has one.",
-  "version": "1.17.0",
+  "versionDescription": "Contacts are listed alphabetically by last name, then first name.",
+  "version": "1.18.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
