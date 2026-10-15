@@ -8,7 +8,7 @@ import {
   Assets_FieldIds, Customers_FieldIds, Opportunity_PhaseIds, Support_Tickets_PhaseIds,
 } from '../../../../workspace/enums';
 import { WORKFLOWS, PHASES } from '../config';
-import { fetchAllPhases, formatMoney } from '../hailer/api-helpers';
+import { fetchAllPhases } from '../hailer/api-helpers';
 import StatTile from './StatTile';
 import OutreachSelect, { OUTREACH_OPTIONS, outreachDateOf, outreachOf } from './OutreachSelect';
 import OverviewMap from './OverviewMap';
@@ -125,7 +125,6 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
 
     const openTickets = data.tickets.filter((t) => t.currentPhase !== Support_Tickets_PhaseIds.done_bee && t.currentPhase !== Support_Tickets_PhaseIds.duplicate_455).length;
     const openOpps = data.opps.filter((o) => o.currentPhase !== Opportunity_PhaseIds.closed_won_dc0 && o.currentPhase !== Opportunity_PhaseIds.closed_lost_0ee).length;
-    const totalWon = visible.reduce((t, c) => t + num(c, Customers_FieldIds.total_won_898), 0);
     const withAssets = new Set(assets.map((a) => linkId(a.fields?.[Assets_FieldIds.company_340])));
     // Agents: customers that other customers name as their Agent. They sell on our behalf and hold no equipment.
     const agentOf = (c: Activity) => linkId(c.fields?.[Customers_FieldIds.agent_e39]);
@@ -160,7 +159,7 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
 
     return {
       visible, active, prospects, byCountry, countries, countryOf, assets, families, overdue, dueSoon, noDue, iso, buckets,
-      customersOverdue, openTickets, openOpps, totalWon, noAssets, agents, unlinkedAgentClients, inScope, contacted, wants, clientRows, now,
+      customersOverdue, openTickets, openOpps, noAssets, agents, unlinkedAgentClients, inScope, contacted, wants, clientRows, now,
     };
   }, [data]);
 
@@ -200,10 +199,9 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
         <StatTile label="Calibrations overdue" value={calc.overdue.length} accent={overdueAccent} valueColor={calc.overdue.length > 0 ? 'red.400' : 'green.400'} hint={`${calc.customersOverdue} customer${calc.customersOverdue === 1 ? '' : 's'}`} />
         <StatTile label="Outreach: contacted" value={`${calc.contacted} of ${calc.inScope.length}`} accent="blue" hint="clients with equipment" />
         <StatTile label="Want a calibration" value={calc.wants.length} accent="green" valueColor={calc.wants.length > 0 ? 'green.400' : undefined} />
-        <StatTile label="Due in 90 days" value={calc.dueSoon} accent={calc.dueSoon > 0 ? 'orange' : 'gray'} valueColor={calc.dueSoon > 0 ? 'orange.400' : undefined} />
+        <StatTile label="Due in 90 days" value={calc.dueSoon} accent={calc.dueSoon > 0 ? 'orange' : 'gray'} valueColor={calc.dueSoon > 0 ? 'orange.400' : undefined} hint="not overdue yet" />
         <StatTile label="Open support tickets" value={calc.openTickets} accent="teal" />
         <StatTile label="Open opportunities" value={calc.openOpps} accent="yellow" />
-        <StatTile label="Total won" value={formatMoney(calc.totalWon)} accent="green" small />
       </SimpleGrid>
 
       <Flex gap={6} direction={{ base: 'column', xl: 'row' }} mb={6} align="flex-start">
@@ -363,7 +361,7 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
       )}
 
       <Text fontSize="xs" color={muted}>
-        {calc.noAssets > 0 ? `${calc.noAssets} active customer${calc.noAssets === 1 ? ' has' : 's have'} no assets on record. ` : ''}Agents are not counted there. Total won is the sum of Total Won on the customer records.
+        {calc.noAssets > 0 ? `${calc.noAssets} active customer${calc.noAssets === 1 ? ' has' : 's have'} no assets on record. ` : ''}Agents are not counted there.
       </Text>
     </Box>
   );

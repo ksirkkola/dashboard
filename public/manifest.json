@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Agent pages now open on their own tabs: Clients (first), Support, Contacts, Opportunities and Online Orders. The Clients tab lists the clients that buy through the agent with country, assets and overdue calibrations. Equipment tabs are not shown for agents.",
-  "version": "1.26.0",
+  "versionDescription": "Overview: removed the Total won card, and the Due in 90 days card now says not overdue yet.",
+  "version": "1.27.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
