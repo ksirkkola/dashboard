@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Agents get a purple Agent tag in the customer list and in the Overview country list, the Overview shows how many clients are agents, and agents are left out of the no-assets note.",
-  "version": "1.20.0",
+  "versionDescription": "Overview: removed a note that wrongly suggested old calibration due dates might be out of date.",
+  "version": "1.19.2",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
