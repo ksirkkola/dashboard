@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "New Overview cover page: a map of Europe and T\u00fcrkiye with clients per country, totals for clients, prospects and countries, assets by type, overdue calibrations (with age buckets and a list), calibrations due in 90 days, open support tickets, open opportunities and total won. Open it from the Overview entry at the top of the customer list.",
-  "version": "1.19.0",
+  "versionDescription": "Overview: removed a note that wrongly suggested old calibration due dates might be out of date.",
+  "version": "1.19.1",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
