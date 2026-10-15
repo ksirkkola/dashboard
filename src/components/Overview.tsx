@@ -224,7 +224,7 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
         <Box flex="1.4" w="100%" minW={0} bg={cardBg} border="1px" borderColor={calc.overdue.length > 0 ? 'red.300' : borderColor} borderRadius="md" p={4}>
           <Heading fontSize="md" mb={1}>Overdue calibrations <Text as="span" fontWeight="normal" color={muted} fontSize="sm">({calc.overdue.length})</Text></Heading>
           <Text fontSize="xs" color={muted} mb={3}>
-            Assets in service whose calibration due date has passed. {calc.noDue > 0 ? `${calc.noDue} asset${calc.noDue === 1 ? ' has' : 's have'} no due date and ${calc.noDue === 1 ? 'is' : 'are'} not counted. ` : ''}Very old dates may mean the record was never updated.
+            Assets in service whose calibration due date has passed. {calc.noDue > 0 ? `${calc.noDue} asset${calc.noDue === 1 ? ' has' : 's have'} no due date and ${calc.noDue === 1 ? 'is' : 'are'} not counted. ` : ''}
           </Text>
           <SimpleGrid columns={{ base: 2, md: 4 }} spacing={2} mb={4}>
             {calc.buckets.map((b) => (

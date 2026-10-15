@@ -12,6 +12,6 @@
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
   "versionDescription": "Overview: removed a note that wrongly suggested old calibration due dates might be out of date.",
-  "version": "1.19.1",
+  "version": "1.19.2",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
