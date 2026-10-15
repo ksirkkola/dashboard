@@ -17,8 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { ComponentType, useEffect, useState } from 'react';
 import { Customers_FieldIds } from '../../../../workspace/enums';
-import { fetchAllPhases, formatMoney } from '../hailer/api-helpers';
-import { WORKFLOWS, PHASES } from '../config';
+import { formatMoney } from '../hailer/api-helpers';
 import { useApp } from '../hailer/use-app';
 import OutreachSelect from './OutreachSelect';
 import {
@@ -46,7 +45,7 @@ interface Props {
   hailer: HailerApi;
   customerId: string;
   refreshKey?: number;
-  onSelectCustomer?: (id: string, name: string) => void;
+  isAgent?: boolean;
 }
 
 interface Stat {
@@ -56,13 +55,11 @@ interface Stat {
   color: string;
 }
 
-export default function CustomerHeader({ hailer, customerId, refreshKey, onSelectCustomer }: Props) {
+export default function CustomerHeader({ hailer, customerId, refreshKey, isAgent }: Props) {
   const { user } = useApp();
   const [customer, setCustomer] = useState<Activity | null>(null);
   const [loading, setLoading] = useState(true);
   const [logoError, setLogoError] = useState(false);
-  // If this customer is an agent, the customers that buy through it.
-  const [agentClients, setAgentClients] = useState<Activity[]>([]);
 
   const cardBg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -87,28 +84,6 @@ export default function CustomerHeader({ hailer, customerId, refreshKey, onSelec
     return () => {
       cancelled = true;
     };
-  }, [hailer, customerId, refreshKey]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setAgentClients([]);
-    (async () => {
-      try {
-        const all = await fetchAllPhases(hailer, WORKFLOWS.customers, PHASES.customers);
-        if (cancelled) return;
-        const mine = all
-          .filter((c) => {
-            const v = c.fields?.[Customers_FieldIds.agent_e39] as { _id?: string } | { _id?: string }[] | undefined;
-            const id = Array.isArray(v) ? v[0]?._id : v?._id;
-            return id === customerId && c.fields?.[Customers_FieldIds.client_status_7d2] !== 'Inactive';
-          })
-          .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
-        setAgentClients(mine);
-      } catch {
-        // the client list is a convenience; the header still works without it
-      }
-    })();
-    return () => { cancelled = true; };
   }, [hailer, customerId, refreshKey]);
 
   if (loading) return <Skeleton height="9rem" mb={6} borderRadius="md" />;
@@ -260,24 +235,7 @@ export default function CustomerHeader({ hailer, customerId, refreshKey, onSelec
             </Button>
           </HStack>
 
-          {agentClients.length > 0 && (
-            <Box mb={stats.length > 0 ? 4 : 0} onClick={(e) => e.stopPropagation()}>
-              <Text fontSize="2xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" mb={1}>
-                Agent for {agentClients.length} client{agentClients.length === 1 ? '' : 's'}
-              </Text>
-              <Wrap spacing={2}>
-                {agentClients.map((c) => (
-                  <WrapItem key={c._id}>
-                    <Button size="xs" variant="outline" onClick={() => onSelectCustomer ? onSelectCustomer(c._id, c.name) : void hailer.ui.activity.open(c._id)}>
-                      {c.name.trim()}
-                    </Button>
-                  </WrapItem>
-                ))}
-              </Wrap>
-            </Box>
-          )}
-
-          {clientStatus !== 'Prospect' && !agentName && agentClients.length === 0 && (
+          {clientStatus !== 'Prospect' && !agentName && !isAgent && (
             <Box mb={stats.length > 0 ? 4 : 0} onClick={(e) => e.stopPropagation()}>
               <Text fontSize="2xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" mb={1}>Calibration outreach</Text>
               <Box display="inline-block" bg={outreachBg} borderRadius="md" p={2}>

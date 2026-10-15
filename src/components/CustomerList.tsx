@@ -10,12 +10,13 @@ interface Props {
   selectedId: string | null;
   onSelect: (id: string, name: string) => void;
   onOverview: () => void;
+  onAgents?: (ids: Set<string>) => void;
   refreshKey?: number;
 }
 
 // Permanent customer list for the left side of the page, in the style of the HR Employee Directory:
 // search box, clickable rows (name + country), selected row highlighted, "x of N" count underneath.
-export default function CustomerList({ hailer, selectedId, onSelect, onOverview, refreshKey }: Props) {
+export default function CustomerList({ hailer, selectedId, onSelect, onOverview, onAgents, refreshKey }: Props) {
   const [customers, setCustomers] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -56,6 +57,7 @@ export default function CustomerList({ hailer, selectedId, onSelect, onOverview,
     });
     return s;
   }, [customers]);
+  useEffect(() => { onAgents?.(agentIds); }, [agentIds]); // eslint-disable-line react-hooks/exhaustive-deps
   const isAgent = (c: Activity) => agentIds.has(c._id);
   const isProspect = (c: Activity) => c.fields?.[Customers_FieldIds.client_status_7d2] === 'Prospect';
 

@@ -21,6 +21,7 @@ import AssetGrid from './components/AssetGrid';
 import CustomerList from './components/CustomerList';
 import CustomerHeader from './components/CustomerHeader';
 import Overview from './components/Overview';
+import AgentClients from './components/AgentClients';
 import TicketsGrid from './components/TicketsGrid';
 import ContactsList from './components/ContactsList';
 import OpportunitiesGrid from './components/OpportunitiesGrid';
@@ -66,6 +67,8 @@ export default function App() {
   const [rentalCount, setRentalCount] = useState<number | null>(null);
   const [onlineOrderCount, setOnlineOrderCount] = useState<number | null>(null);
   const [tripCount, setTripCount] = useState<number | null>(null);
+  const [clientCount, setClientCount] = useState<number | null>(null);
+  const [agentIds, setAgentIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     void api.init();
@@ -86,7 +89,10 @@ export default function App() {
     setRentalCount(null);
     setOnlineOrderCount(null);
     setTripCount(null);
+    setClientCount(null);
   }, [customerId]);
+
+  const isAgent = customerId != null && agentIds.has(customerId);
 
   if (inside === null) {
     return (
@@ -157,14 +163,43 @@ export default function App() {
             selectedId={customerId}
             onSelect={(id) => setCustomerId(id)}
             onOverview={() => setCustomerId(null)}
+            onAgents={setAgentIds}
             refreshKey={refreshKey}
           />
         </Box>
         <Box flex="1" minW={0} w="100%">
       {customerId ? (
         <>
-          <CustomerHeader hailer={hailer} customerId={customerId} refreshKey={refreshKey} onSelectCustomer={(id) => setCustomerId(id)} />
-          <Tabs variant="soft-rounded" colorScheme="blue" isLazy>
+          <CustomerHeader hailer={hailer} customerId={customerId} refreshKey={refreshKey} isAgent={isAgent} />
+          {isAgent ? (
+          <Tabs key="agent" variant="soft-rounded" colorScheme="blue" isLazy>
+            <TabList overflowX="auto" overflowY="hidden" sx={{ scrollbarWidth: 'none' }} pb={2}>
+              <Tab><TabLabel label="Clients" count={clientCount} icon={UsersIcon} /></Tab>
+              <Tab><TabLabel label="Support" count={ticketCount} icon={TicketIcon} /></Tab>
+              <Tab><TabLabel label="Contacts" count={contactCount} icon={UsersIcon} /></Tab>
+              <Tab><TabLabel label="Opportunities" count={oppCount} icon={TrendingIcon} /></Tab>
+              <Tab><TabLabel label="Online Orders" count={onlineOrderCount} icon={PackageIcon} /></Tab>
+            </TabList>
+            <TabPanels>
+              <TabPanel px={0} pt={4}>
+                <AgentClients hailer={hailer} agentId={customerId} refreshKey={refreshKey} onCount={setClientCount} onSelectCustomer={(id) => setCustomerId(id)} />
+              </TabPanel>
+              <TabPanel px={0} pt={4}>
+                <TicketsGrid hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setTicketCount} />
+              </TabPanel>
+              <TabPanel px={0} pt={4}>
+                <ContactsList hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setContactCount} />
+              </TabPanel>
+              <TabPanel px={0} pt={4}>
+                <OpportunitiesGrid hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setOppCount} />
+              </TabPanel>
+              <TabPanel px={0} pt={4}>
+                <OnlineOrderGrid hailer={hailer} customerId={customerId} refreshKey={refreshKey} onCount={setOnlineOrderCount} />
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+          ) : (
+          <Tabs key="client" variant="soft-rounded" colorScheme="blue" isLazy>
             <TabList overflowX="auto" overflowY="hidden" sx={{ scrollbarWidth: 'none' }} pb={2}>
               <Tab><TabLabel label="Assets" count={assetCount} icon={CubeIcon} /></Tab>
               <Tab><TabLabel label="Support" count={ticketCount} icon={TicketIcon} /></Tab>
@@ -202,6 +237,7 @@ export default function App() {
               </TabPanel>
             </TabPanels>
           </Tabs>
+          )}
         </>
       ) : (
         <Overview hailer={hailer} refreshKey={refreshKey} onSelectCustomer={(id) => setCustomerId(id)} />
