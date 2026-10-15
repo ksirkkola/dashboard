@@ -20,6 +20,7 @@ import {
 import AssetGrid from './components/AssetGrid';
 import CustomerList from './components/CustomerList';
 import CustomerHeader from './components/CustomerHeader';
+import Overview from './components/Overview';
 import TicketsGrid from './components/TicketsGrid';
 import ContactsList from './components/ContactsList';
 import OpportunitiesGrid from './components/OpportunitiesGrid';
@@ -132,6 +133,8 @@ export default function App() {
       <HStack justify="space-between" align="center" mb={6}>
         <HStack spacing={2}>
           <Heading
+            cursor="pointer"
+            onClick={() => setCustomerId(null)}
             fontSize="xl"
             bgGradient="linear(to-r, blue.400, purple.400)"
             bgClip="text"
@@ -153,6 +156,7 @@ export default function App() {
             hailer={hailer}
             selectedId={customerId}
             onSelect={(id) => setCustomerId(id)}
+            onOverview={() => setCustomerId(null)}
             refreshKey={refreshKey}
           />
         </Box>
@@ -200,7 +204,7 @@ export default function App() {
           </Tabs>
         </>
       ) : (
-        <Text color="subtleText">Select a customer to view details.</Text>
+        <Overview hailer={hailer} refreshKey={refreshKey} onSelectCustomer={(id) => setCustomerId(id)} />
       )}
         </Box>
       </Flex>

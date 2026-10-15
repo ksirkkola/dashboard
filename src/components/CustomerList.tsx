@@ -9,12 +9,13 @@ interface Props {
   hailer: HailerApi;
   selectedId: string | null;
   onSelect: (id: string, name: string) => void;
+  onOverview: () => void;
   refreshKey?: number;
 }
 
 // Permanent customer list for the left side of the page, in the style of the HR Employee Directory:
 // search box, clickable rows (name + country), selected row highlighted, "x of N" count underneath.
-export default function CustomerList({ hailer, selectedId, onSelect, refreshKey }: Props) {
+export default function CustomerList({ hailer, selectedId, onSelect, onOverview, refreshKey }: Props) {
   const [customers, setCustomers] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -35,7 +36,6 @@ export default function CustomerList({ hailer, selectedId, onSelect, refreshKey 
         .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
       setCustomers(sorted);
       setLoading(false);
-      if (!selectedId && sorted.length > 0) onSelect(sorted[0]._id, sorted[0].name);
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,6 +58,14 @@ export default function CustomerList({ hailer, selectedId, onSelect, refreshKey 
 
   return (
     <Box>
+      <Box
+        px={3} py={2} mb={3} cursor="pointer" border="1px" borderColor={borderColor} borderRadius="md"
+        bg={selectedId === null ? selectedBg : undefined} _hover={{ bg: selectedId === null ? selectedBg : hoverBg }}
+        onClick={onOverview}
+      >
+        <Text fontSize="sm" fontWeight="semibold">Overview</Text>
+        <Text fontSize="xs" color={mutedText}>Map, totals and calibrations</Text>
+      </Box>
       <Input
         size="sm" mb={3} placeholder="Search customers..."
         value={search} onChange={(e) => setSearch(e.target.value)}

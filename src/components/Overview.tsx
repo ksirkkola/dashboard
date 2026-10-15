@@ -1,0 +1,271 @@
+import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
+import {
+  Badge, Box, Button, Center, Flex, Heading, HStack, Progress, SimpleGrid, Skeleton, Spinner, Table, TableContainer,
+  Tbody, Td, Text, Th, Thead, Tr, useColorModeValue,
+} from '@chakra-ui/react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Assets_FieldIds, Customers_FieldIds, Opportunity_PhaseIds, Support_Tickets_PhaseIds,
+} from '../../../../workspace/enums';
+import { WORKFLOWS, PHASES } from '../config';
+import { fetchAllPhases, formatMoney } from '../hailer/api-helpers';
+import StatTile from './StatTile';
+import OverviewMap from './OverviewMap';
+
+const DAY = 24 * 60 * 60 * 1000;
+const str = (a: Activity, id: string) => (a.fields?.[id] as string | undefined) ?? '';
+const num = (a: Activity, id: string) => (typeof a.fields?.[id] === 'number' ? (a.fields?.[id] as number) : 0);
+const linkId = (v: unknown): string | null => {
+  if (Array.isArray(v)) return (v[0] as { _id?: string } | undefined)?._id ?? null;
+  if (v && typeof v === 'object') return (v as { _id?: string })._id ?? null;
+  return null;
+};
+const fmtDate = (ms: number) => new Date(ms).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+const overdueText = (days: number) => {
+  const m = Math.floor(days / 30.44);
+  if (m < 1) return `${days} day${days === 1 ? '' : 's'}`;
+  if (m < 24) return `${m} month${m === 1 ? '' : 's'}`;
+  const y = Math.floor(m / 12);
+  return `${y} year${y === 1 ? '' : 's'}`;
+};
+
+interface Props {
+  hailer: HailerApi;
+  refreshKey?: number;
+  onSelectCustomer: (id: string, name: string) => void;
+}
+
+interface Data {
+  customers: Activity[];
+  assets: Activity[];
+  tickets: Activity[];
+  opps: Activity[];
+}
+
+export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props) {
+  const [data, setData] = useState<Data | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [country, setCountry] = useState<string | null>(null);
+  const [showAllOverdue, setShowAllOverdue] = useState(false);
+  const muted = useColorModeValue('gray.500', 'gray.400');
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [customers, assets, tickets, opps] = await Promise.all([
+          fetchAllPhases(hailer, WORKFLOWS.customers, PHASES.customers),
+          fetchAllPhases(hailer, WORKFLOWS.assets, PHASES.assets),
+          fetchAllPhases(hailer, WORKFLOWS.supportTickets, PHASES.supportTickets).catch(() => [] as Activity[]),
+          fetchAllPhases(hailer, WORKFLOWS.opportunity, PHASES.opportunity).catch(() => [] as Activity[]),
+        ]);
+        if (!cancelled) setData({ customers, assets, tickets, opps });
+      } catch (err) {
+        if (!cancelled) setError((err as HailerError).msg ?? 'Failed to load the overview');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [hailer, refreshKey]);
+
+  const calc = useMemo(() => {
+    if (!data) return null;
+    const statusOf = (c: Activity) => str(c, Customers_FieldIds.client_status_7d2);
+    // Inactive customers, and their assets, are left out everywhere (same as the customer list).
+    const visible = data.customers.filter((c) => statusOf(c) !== 'Inactive');
+    const byId = new Map(visible.map((c) => [c._id, c]));
+    const active = visible.filter((c) => statusOf(c) !== 'Prospect');
+    const prospects = visible.filter((c) => statusOf(c) === 'Prospect');
+
+    const countryOf = (c: Activity) => str(c, Customers_FieldIds.company_country_9a0) || 'Unknown';
+    const byCountry: Record<string, { all: number; active: number; prospects: number }> = {};
+    visible.forEach((c) => {
+      const k = countryOf(c);
+      const e = (byCountry[k] ??= { all: 0, active: 0, prospects: 0 });
+      e.all += 1;
+      if (statusOf(c) === 'Prospect') e.prospects += 1; else e.active += 1;
+    });
+    const countries = Object.entries(byCountry).sort((a, b) => b[1].all - a[1].all || a[0].localeCompare(b[0]));
+
+    // Assets: not retired, and owned by a customer shown on the dashboard.
+    const assets = data.assets.filter((a) => str(a, 'status') !== 'Retired' && byId.has(linkId(a.fields?.[Assets_FieldIds.company_340]) ?? ''));
+    const familyCount: Record<string, number> = {};
+    assets.forEach((a) => {
+      const k = str(a, Assets_FieldIds.product_family_23a) || 'No family set';
+      familyCount[k] = (familyCount[k] ?? 0) + 1;
+    });
+    const families = Object.entries(familyCount).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+    const now = Date.now();
+    const withDue = assets.filter((a) => num(a, Assets_FieldIds.calibration_due_f5e) > 0);
+    const overdue = withDue
+      .filter((a) => num(a, Assets_FieldIds.calibration_due_f5e) < now)
+      .map((a) => {
+        const due = num(a, Assets_FieldIds.calibration_due_f5e);
+        const cust = byId.get(linkId(a.fields?.[Assets_FieldIds.company_340]) ?? '');
+        return { a, due, days: Math.floor((now - due) / DAY), cust };
+      })
+      .sort((x, y) => y.days - x.days);
+    const dueSoon = withDue.filter((a) => {
+      const d = num(a, Assets_FieldIds.calibration_due_f5e);
+      return d >= now && d < now + 90 * DAY;
+    }).length;
+    const noDue = assets.length - withDue.length;
+    const iso = assets.filter((a) => str(a, Assets_FieldIds.iso_17025_04e) === 'Yes').length;
+    const buckets = [
+      { label: 'Under 6 months', n: overdue.filter((o) => o.days < 183).length },
+      { label: '6 to 12 months', n: overdue.filter((o) => o.days >= 183 && o.days < 365).length },
+      { label: '1 to 3 years', n: overdue.filter((o) => o.days >= 365 && o.days < 1095).length },
+      { label: 'Over 3 years', n: overdue.filter((o) => o.days >= 1095).length },
+    ];
+    const customersOverdue = new Set(overdue.map((o) => o.cust?._id)).size;
+
+    const openTickets = data.tickets.filter((t) => t.currentPhase !== Support_Tickets_PhaseIds.done_bee && t.currentPhase !== Support_Tickets_PhaseIds.duplicate_455).length;
+    const openOpps = data.opps.filter((o) => o.currentPhase !== Opportunity_PhaseIds.closed_won_dc0 && o.currentPhase !== Opportunity_PhaseIds.closed_lost_0ee).length;
+    const totalWon = visible.reduce((t, c) => t + num(c, Customers_FieldIds.total_won_898), 0);
+    const withAssets = new Set(assets.map((a) => linkId(a.fields?.[Assets_FieldIds.company_340])));
+    const noAssets = active.filter((c) => !withAssets.has(c._id)).length;
+
+    return {
+      visible, active, prospects, byCountry, countries, countryOf, assets, families, overdue, dueSoon, noDue, iso, buckets,
+      customersOverdue, openTickets, openOpps, totalWon, noAssets, now,
+    };
+  }, [data]);
+
+  if (error) return <Center py={16}><Text color="red.500">{error}</Text></Center>;
+  if (!calc) {
+    return (
+      <Box>
+        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={3} mb={4}>{[0, 1, 2, 3].map((i) => <Skeleton key={i} h="84px" borderRadius="md" />)}</SimpleGrid>
+        <Center py={10}><Spinner /></Center>
+      </Box>
+    );
+  }
+
+  const mapCounts = Object.fromEntries(calc.countries.map(([k, v]) => [k, v.all]));
+  const maxFamily = Math.max(1, ...calc.families.map((f) => f[1]));
+  const inCountry = country ? calc.visible.filter((c) => calc.countryOf(c) === country).sort((a, b) => a.name.localeCompare(b.name)) : [];
+  const overdueShown = showAllOverdue ? calc.overdue : calc.overdue.slice(0, 10);
+  const overdueAccent = calc.overdue.length > 0 ? 'red' : 'green';
+
+  return (
+    <Box>
+      <Heading fontSize="2xl" mb={1}>Overview</Heading>
+      <Text fontSize="sm" color={muted} mb={5}>
+        Customers, equipment and calibrations at a glance. Inactive customers and retired assets are not counted. Click a customer, country or overdue row to open it.
+      </Text>
+
+      <SimpleGrid columns={{ base: 2, md: 3, xl: 5 }} spacing={3} mb={6}>
+        <StatTile label="Clients" value={calc.active.length} accent="blue" hint="active customers" />
+        <StatTile label="Prospects" value={calc.prospects.length} accent="orange" valueColor="orange.400" hint={`${calc.prospects.length + calc.active.length} incl. clients`} />
+        <StatTile label="Countries" value={calc.countries.filter(([k]) => k !== 'Unknown').length} accent="cyan" />
+        <StatTile label="Assets in service" value={calc.assets.length} accent="purple" hint={`${calc.iso} ISO 17025`} />
+        <StatTile label="Calibrations overdue" value={calc.overdue.length} accent={overdueAccent} valueColor={calc.overdue.length > 0 ? 'red.400' : 'green.400'} hint={`${calc.customersOverdue} customer${calc.customersOverdue === 1 ? '' : 's'}`} />
+        <StatTile label="Due in 90 days" value={calc.dueSoon} accent={calc.dueSoon > 0 ? 'orange' : 'gray'} valueColor={calc.dueSoon > 0 ? 'orange.400' : undefined} />
+        <StatTile label="Open support tickets" value={calc.openTickets} accent="teal" />
+        <StatTile label="Open opportunities" value={calc.openOpps} accent="yellow" />
+        <StatTile label="Total won" value={formatMoney(calc.totalWon)} accent="green" small />
+      </SimpleGrid>
+
+      <Flex gap={6} direction={{ base: 'column', xl: 'row' }} mb={6} align="flex-start">
+        <Box flex="1.6" w="100%" minW={0} bg={cardBg} border="1px" borderColor={borderColor} borderRadius="md" p={4}>
+          <Heading fontSize="md" mb={1}>Clients by country</Heading>
+          <Text fontSize="xs" color={muted} mb={3}>The number in each circle is the clients in that country. Click a country to list them.</Text>
+          <OverviewMap counts={mapCounts} selected={country} onSelect={setCountry} />
+          {mapCounts.Unknown ? <Text fontSize="xs" color={muted} mt={2}>{mapCounts.Unknown} customer(s) have no country set.</Text> : null}
+        </Box>
+
+        <Box flex="1" w="100%" minW={0} bg={cardBg} border="1px" borderColor={borderColor} borderRadius="md" p={4}>
+          <HStack justify="space-between" mb={2}>
+            <Heading fontSize="md">{country ? country : 'Clients by country'}</Heading>
+            {country && <Button size="xs" variant="ghost" onClick={() => setCountry(null)}>Show all countries</Button>}
+          </HStack>
+          {country ? (
+            <Box>
+              {inCountry.map((c) => (
+                <Flex key={c._id} py={1.5} px={2} borderBottom="1px" borderColor={borderColor} cursor="pointer" _hover={{ bg: 'blackAlpha.100' }} justify="space-between" onClick={() => onSelectCustomer(c._id, c.name)}>
+                  <Text fontSize="sm" noOfLines={1}>{c.name}</Text>
+                  {str(c, Customers_FieldIds.client_status_7d2) === 'Prospect' && <Badge colorScheme="orange" variant="subtle" fontSize="2xs">Prospect</Badge>}
+                </Flex>
+              ))}
+            </Box>
+          ) : (
+            <TableContainer maxH="640px" overflowY="auto">
+              <Table size="sm">
+                <Thead><Tr><Th>Country</Th><Th isNumeric>Clients</Th><Th isNumeric>Prospects</Th></Tr></Thead>
+                <Tbody>
+                  {calc.countries.map(([k, v]) => (
+                    <Tr key={k} cursor="pointer" _hover={{ bg: 'blackAlpha.100' }} onClick={() => setCountry(k)}>
+                      <Td fontWeight="medium">{k}</Td>
+                      <Td isNumeric>{v.active}</Td>
+                      <Td isNumeric color={v.prospects ? undefined : muted}>{v.prospects || '–'}</Td>
+                    </Tr>
+                  ))}
+                  <Tr fontWeight="bold"><Td>Total</Td><Td isNumeric>{calc.active.length}</Td><Td isNumeric>{calc.prospects.length || '–'}</Td></Tr>
+                </Tbody>
+              </Table>
+            </TableContainer>
+          )}
+        </Box>
+      </Flex>
+
+      <Flex gap={6} direction={{ base: 'column', xl: 'row' }} align="flex-start" mb={6}>
+        <Box flex="1" w="100%" minW={0} bg={cardBg} border="1px" borderColor={borderColor} borderRadius="md" p={4}>
+          <Heading fontSize="md" mb={3}>Assets by type <Text as="span" fontWeight="normal" color={muted} fontSize="sm">({calc.assets.length} in service)</Text></Heading>
+          {calc.families.map(([name, n]) => (
+            <Box key={name} mb={2.5}>
+              <Flex justify="space-between" fontSize="sm"><Text fontWeight="medium">{name}</Text><Text fontWeight="semibold">{n}</Text></Flex>
+              <Progress value={(n / maxFamily) * 100} size="xs" borderRadius="full" colorScheme="purple" />
+            </Box>
+          ))}
+        </Box>
+
+        <Box flex="1.4" w="100%" minW={0} bg={cardBg} border="1px" borderColor={calc.overdue.length > 0 ? 'red.300' : borderColor} borderRadius="md" p={4}>
+          <Heading fontSize="md" mb={1}>Overdue calibrations <Text as="span" fontWeight="normal" color={muted} fontSize="sm">({calc.overdue.length})</Text></Heading>
+          <Text fontSize="xs" color={muted} mb={3}>
+            Assets in service whose calibration due date has passed. {calc.noDue > 0 ? `${calc.noDue} asset${calc.noDue === 1 ? ' has' : 's have'} no due date and ${calc.noDue === 1 ? 'is' : 'are'} not counted. ` : ''}Very old dates may mean the record was never updated.
+          </Text>
+          <SimpleGrid columns={{ base: 2, md: 4 }} spacing={2} mb={4}>
+            {calc.buckets.map((b) => (
+              <Box key={b.label} border="1px" borderColor={borderColor} borderRadius="md" px={3} py={2}>
+                <Text fontSize="2xs" color={muted} textTransform="uppercase" letterSpacing="wider">{b.label}</Text>
+                <Text fontSize="xl" fontWeight="bold" color={b.n > 0 ? 'red.400' : undefined}>{b.n}</Text>
+              </Box>
+            ))}
+          </SimpleGrid>
+          {calc.overdue.length === 0 ? (
+            <Text color={muted} fontSize="sm">Nothing is overdue.</Text>
+          ) : (
+            <>
+              <TableContainer>
+                <Table size="sm">
+                  <Thead><Tr><Th>Asset</Th><Th>Customer</Th><Th>Due</Th><Th isNumeric>Overdue</Th></Tr></Thead>
+                  <Tbody>
+                    {overdueShown.map((o) => (
+                      <Tr key={o.a._id} cursor={o.cust ? 'pointer' : 'default'} _hover={{ bg: 'blackAlpha.100' }} onClick={() => o.cust && onSelectCustomer(o.cust._id, o.cust.name)}>
+                        <Td fontWeight="medium" whiteSpace="nowrap">{o.a.name}</Td>
+                        <Td maxW="260px" whiteSpace="normal"><Text noOfLines={1}>{o.cust?.name ?? '—'}</Text><Text fontSize="xs" color={muted}>{o.cust ? calc.countryOf(o.cust) : ''}</Text></Td>
+                        <Td whiteSpace="nowrap">{fmtDate(o.due)}</Td>
+                        <Td isNumeric whiteSpace="nowrap" color="red.400" fontWeight="semibold">{overdueText(o.days)}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TableContainer>
+              {calc.overdue.length > 10 && (
+                <Button size="sm" variant="ghost" mt={2} onClick={() => setShowAllOverdue((v) => !v)}>
+                  {showAllOverdue ? 'Show fewer' : `Show all ${calc.overdue.length}`}
+                </Button>
+              )}
+            </>
+          )}
+        </Box>
+      </Flex>
+
+      <Text fontSize="xs" color={muted}>
+        {calc.noAssets > 0 ? `${calc.noAssets} active customer${calc.noAssets === 1 ? ' has' : 's have'} no assets on record. ` : ''}Total won is the sum of Total Won on the customer records.
+      </Text>
+    </Box>
+  );
+}
