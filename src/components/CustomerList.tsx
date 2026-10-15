@@ -46,6 +46,7 @@ export default function CustomerList({ hailer, selectedId, onSelect, onOverview,
     return typeof v === 'string' ? v : '';
   };
 
+  const isAgent = (c: Activity) => c.fields?.[Customers_FieldIds.is_this_an_agent_client_0eb] === 'Yes';
   const isProspect = (c: Activity) => c.fields?.[Customers_FieldIds.client_status_7d2] === 'Prospect';
 
   const filtered = useMemo(() => {
@@ -89,6 +90,7 @@ export default function CustomerList({ hailer, selectedId, onSelect, onOverview,
               <HStack spacing={2} align="center">
                 <Text fontSize="sm" fontWeight={c._id === selectedId ? 'semibold' : 'medium'} noOfLines={1}>{c.name}</Text>
                 {isProspect(c) && <Badge colorScheme="orange" variant="subtle" fontSize="2xs" flexShrink={0}>Prospect</Badge>}
+                {isAgent(c) && <Badge colorScheme="purple" variant="subtle" fontSize="2xs" flexShrink={0}>Agent</Badge>}
               </HStack>
               <Text fontSize="xs" color={mutedText} noOfLines={1}>{countryOf(c) || '—'}</Text>
             </Box>
@@ -97,7 +99,7 @@ export default function CustomerList({ hailer, selectedId, onSelect, onOverview,
       </VStack>
       <Text fontSize="xs" color={mutedText} mt={2}>
         {filtered.length} of {customers.length} customer{customers.length === 1 ? '' : 's'}
-        {customers.some(isProspect) ? ` (${customers.filter(isProspect).length} prospects)` : ''}
+        {customers.some(isProspect) ? ` (${customers.filter(isProspect).length} prospects` : ''}{customers.some(isAgent) ? `${customers.some(isProspect) ? ', ' : ' ('}${customers.filter(isAgent).length} agents)` : customers.some(isProspect) ? ')' : ''}
       </Text>
     </Box>
   );

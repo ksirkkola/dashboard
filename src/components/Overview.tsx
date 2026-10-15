@@ -125,11 +125,14 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
     const openOpps = data.opps.filter((o) => o.currentPhase !== Opportunity_PhaseIds.closed_won_dc0 && o.currentPhase !== Opportunity_PhaseIds.closed_lost_0ee).length;
     const totalWon = visible.reduce((t, c) => t + num(c, Customers_FieldIds.total_won_898), 0);
     const withAssets = new Set(assets.map((a) => linkId(a.fields?.[Assets_FieldIds.company_340])));
-    const noAssets = active.filter((c) => !withAssets.has(c._id)).length;
+    const isAgent = (c: Activity) => str(c, Customers_FieldIds.is_this_an_agent_client_0eb) === 'Yes';
+    const agents = visible.filter(isAgent).length;
+    // Agents sell on our behalf and do not hold equipment, so they are not expected to have assets.
+    const noAssets = active.filter((c) => !isAgent(c) && !withAssets.has(c._id)).length;
 
     return {
       visible, active, prospects, byCountry, countries, countryOf, assets, families, overdue, dueSoon, noDue, iso, buckets,
-      customersOverdue, openTickets, openOpps, totalWon, noAssets, now,
+      customersOverdue, openTickets, openOpps, totalWon, noAssets, agents, now,
     };
   }, [data]);
 
@@ -157,7 +160,7 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
       </Text>
 
       <SimpleGrid columns={{ base: 2, md: 3, xl: 5 }} spacing={3} mb={6}>
-        <StatTile label="Clients" value={calc.active.length} accent="blue" hint="active customers" />
+        <StatTile label="Clients" value={calc.active.length} accent="blue" hint={calc.agents > 0 ? `${calc.agents} are agents` : 'active customers'} />
         <StatTile label="Prospects" value={calc.prospects.length} accent="orange" valueColor="orange.400" hint={`${calc.prospects.length + calc.active.length} incl. clients`} />
         <StatTile label="Countries" value={calc.countries.filter(([k]) => k !== 'Unknown').length} accent="cyan" />
         <StatTile label="Assets in service" value={calc.assets.length} accent="purple" hint={`${calc.iso} ISO 17025`} />
@@ -186,7 +189,10 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
               {inCountry.map((c) => (
                 <Flex key={c._id} py={1.5} px={2} borderBottom="1px" borderColor={borderColor} cursor="pointer" _hover={{ bg: 'blackAlpha.100' }} justify="space-between" onClick={() => onSelectCustomer(c._id, c.name)}>
                   <Text fontSize="sm" noOfLines={1}>{c.name}</Text>
-                  {str(c, Customers_FieldIds.client_status_7d2) === 'Prospect' && <Badge colorScheme="orange" variant="subtle" fontSize="2xs">Prospect</Badge>}
+                  <HStack spacing={1}>
+                    {str(c, Customers_FieldIds.client_status_7d2) === 'Prospect' && <Badge colorScheme="orange" variant="subtle" fontSize="2xs">Prospect</Badge>}
+                    {str(c, Customers_FieldIds.is_this_an_agent_client_0eb) === 'Yes' && <Badge colorScheme="purple" variant="subtle" fontSize="2xs">Agent</Badge>}
+                  </HStack>
                 </Flex>
               ))}
             </Box>
@@ -264,7 +270,7 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
       </Flex>
 
       <Text fontSize="xs" color={muted}>
-        {calc.noAssets > 0 ? `${calc.noAssets} active customer${calc.noAssets === 1 ? ' has' : 's have'} no assets on record. ` : ''}Total won is the sum of Total Won on the customer records.
+        {calc.noAssets > 0 ? `${calc.noAssets} active customer${calc.noAssets === 1 ? ' has' : 's have'} no assets on record. ` : ''}Agents are not counted. Total won is the sum of Total Won on the customer records.
       </Text>
     </Box>
   );
