@@ -35,7 +35,9 @@ export default function AssetGrid({ hailer, customerId, refreshKey, onCount }: P
           fetchAllPhases(hailer, WORKFLOWS.assetTypeImages, PHASES.assetTypeImages),
         ]);
         if (cancelled) return;
-        const mine = filterByLink(all, Assets_FieldIds.company_340, customerId);
+        // Retired assets (out of service) are not shown. Their records are untouched.
+        const mine = filterByLink(all, Assets_FieldIds.company_340, customerId)
+          .filter((x) => x.fields?.[Assets_FieldIds.status_9b5] !== 'Retired');
         setAssets(mine);
         onCount?.(mine.length);
 
