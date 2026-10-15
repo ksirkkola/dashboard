@@ -1,6 +1,6 @@
 import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
 import {
-  Badge, Box, Button, Center, Flex, Heading, HStack, Progress, SimpleGrid, Skeleton, Spinner, Table, TableContainer,
+  Badge, Box, Button, Center, Flex, Heading, HStack, Progress, Select, SimpleGrid, Skeleton, Spinner, Table, TableContainer,
   Tbody, Td, Text, Th, Thead, Tr, useColorModeValue,
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
@@ -10,6 +10,7 @@ import {
 import { WORKFLOWS, PHASES } from '../config';
 import { fetchAllPhases, formatMoney } from '../hailer/api-helpers';
 import StatTile from './StatTile';
+import OutreachSelect, { OUTREACH_OPTIONS, outreachDateOf, outreachOf } from './OutreachSelect';
 import OverviewMap from './OverviewMap';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -47,6 +48,7 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
   const [error, setError] = useState<string | null>(null);
   const [country, setCountry] = useState<string | null>(null);
   const [showAllOverdue, setShowAllOverdue] = useState(false);
+  const [outreachFilter, setOutreachFilter] = useState('Not contacted');
   const muted = useColorModeValue('gray.500', 'gray.400');
   const cardBg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -136,9 +138,26 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
     const unlinkedAgentClients = visible.filter((c) => str(c, Customers_FieldIds.is_this_an_agent_client_0eb) === 'Yes' && !agentOf(c) && !agentIds.has(c._id)).length;
     const noAssets = active.filter((c) => !agentIds.has(c._id) && !withAssets.has(c._id)).length;
 
+    // Calibration outreach is per client. Prospects, agents and clients that buy through an agent are not on the list.
+    const agentNameOf = (c: Activity) => {
+      const v = c.fields?.[Customers_FieldIds.agent_e39] as { name?: string } | { name?: string }[] | undefined;
+      return (Array.isArray(v) ? v[0]?.name : v?.name) ?? '';
+    };
+    const inScope = active.filter((c) => !agentIds.has(c._id) && !agentOf(c) && withAssets.has(c._id));
+    const contacted = inScope.filter((c) => outreachOf(c) !== 'Not contacted').length;
+    const wants = inScope.filter((c) => outreachOf(c) === 'Wants a calibration');
+    const clientRowsMap = new Map<string, { cust: Activity; n: number; oldestDays: number; oldestDue: number }>();
+    overdue.forEach((o) => {
+      if (!o.cust) return;
+      const e = clientRowsMap.get(o.cust._id);
+      if (!e) clientRowsMap.set(o.cust._id, { cust: o.cust, n: 1, oldestDays: o.days, oldestDue: o.due });
+      else { e.n += 1; if (o.days > e.oldestDays) { e.oldestDays = o.days; e.oldestDue = o.due; } }
+    });
+    const clientRows = [...clientRowsMap.values()].map((r) => ({ ...r, agent: agentNameOf(r.cust) }));
+
     return {
       visible, active, prospects, byCountry, countries, countryOf, assets, families, overdue, dueSoon, noDue, iso, buckets,
-      customersOverdue, openTickets, openOpps, totalWon, noAssets, agents, unlinkedAgentClients, now,
+      customersOverdue, openTickets, openOpps, totalWon, noAssets, agents, unlinkedAgentClients, inScope, contacted, wants, clientRows, now,
     };
   }, [data]);
 
@@ -155,7 +174,12 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
   const mapCounts = Object.fromEntries(calc.countries.map(([k, v]) => [k, v.all]));
   const maxFamily = Math.max(1, ...calc.families.map((f) => f[1]));
   const inCountry = country ? calc.visible.filter((c) => calc.countryOf(c) === country).sort((a, b) => a.name.localeCompare(b.name)) : [];
-  const overdueShown = showAllOverdue ? calc.overdue : calc.overdue.slice(0, 10);
+  const rowsFiltered = calc.clientRows
+    .filter((r) => outreachFilter === 'All' ? true : outreachFilter === 'Via agent' ? !!r.agent : !r.agent && outreachOf(r.cust) === outreachFilter)
+    .sort((a, b) => (a.agent ? 1 : 0) - (b.agent ? 1 : 0) || b.oldestDays - a.oldestDays);
+  const rowsShown = showAllOverdue ? rowsFiltered : rowsFiltered.slice(0, 10);
+  const saved = (id: string, status: string, ms: number) =>
+    setData((d) => d && ({ ...d, customers: d.customers.map((c) => c._id === id ? { ...c, fields: { ...c.fields, [Customers_FieldIds.calibration_outreach_dfa]: status, [Customers_FieldIds.calibration_outreach_last_contacted_dfe]: ms } } : c) }));
   const overdueAccent = calc.overdue.length > 0 ? 'red' : 'green';
 
   return (
@@ -171,6 +195,8 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
         <StatTile label="Countries" value={calc.countries.filter(([k]) => k !== 'Unknown').length} accent="cyan" />
         <StatTile label="Assets in service" value={calc.assets.length} accent="purple" hint={`${calc.iso} ISO 17025`} />
         <StatTile label="Calibrations overdue" value={calc.overdue.length} accent={overdueAccent} valueColor={calc.overdue.length > 0 ? 'red.400' : 'green.400'} hint={`${calc.customersOverdue} customer${calc.customersOverdue === 1 ? '' : 's'}`} />
+        <StatTile label="Outreach: contacted" value={`${calc.contacted} of ${calc.inScope.length}`} accent="blue" hint="clients with equipment" />
+        <StatTile label="Want a calibration" value={calc.wants.length} accent="green" valueColor={calc.wants.length > 0 ? 'green.400' : undefined} />
         <StatTile label="Due in 90 days" value={calc.dueSoon} accent={calc.dueSoon > 0 ? 'orange' : 'gray'} valueColor={calc.dueSoon > 0 ? 'orange.400' : undefined} />
         <StatTile label="Open support tickets" value={calc.openTickets} accent="teal" />
         <StatTile label="Open opportunities" value={calc.openOpps} accent="yellow" />
@@ -250,30 +276,63 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
             <Text color={muted} fontSize="sm">Nothing is overdue.</Text>
           ) : (
             <>
-              <TableContainer>
-                <Table size="sm">
-                  <Thead><Tr><Th>Asset</Th><Th>Customer</Th><Th>Due</Th><Th isNumeric>Overdue</Th></Tr></Thead>
-                  <Tbody>
-                    {overdueShown.map((o) => (
-                      <Tr key={o.a._id} cursor={o.cust ? 'pointer' : 'default'} _hover={{ bg: 'blackAlpha.100' }} onClick={() => o.cust && onSelectCustomer(o.cust._id, o.cust.name)}>
-                        <Td fontWeight="medium" whiteSpace="nowrap">{o.a.name}</Td>
-                        <Td maxW="260px" whiteSpace="normal"><Text noOfLines={1}>{o.cust?.name ?? '—'}</Text><Text fontSize="xs" color={muted}>{o.cust ? calc.countryOf(o.cust) : ''}</Text></Td>
-                        <Td whiteSpace="nowrap">{fmtDate(o.due)}</Td>
-                        <Td isNumeric whiteSpace="nowrap" color="red.400" fontWeight="semibold">{overdueText(o.days)}</Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              </TableContainer>
-              {calc.overdue.length > 10 && (
+              <HStack mb={3} spacing={3} flexWrap="wrap">
+                <Text fontSize="sm" fontWeight="semibold">Clients to call</Text>
+                <Select size="sm" maxW="230px" value={outreachFilter} onChange={(e) => { setOutreachFilter(e.target.value); setShowAllOverdue(false); }}>
+                  <option value="Not contacted">Not contacted yet</option>
+                  {OUTREACH_OPTIONS.filter((o) => o !== 'Not contacted').map((o) => <option key={o} value={o}>{o}</option>)}
+                  <option value="Via agent">Through an agent</option>
+                  <option value="All">All with overdue assets</option>
+                </Select>
+                <Text fontSize="xs" color={muted}>{rowsFiltered.length} client{rowsFiltered.length === 1 ? '' : 's'}</Text>
+              </HStack>
+              {rowsFiltered.length === 0 ? (
+                <Text color={muted} fontSize="sm" py={2}>No clients in this group.</Text>
+              ) : (
+                <TableContainer>
+                  <Table size="sm">
+                    <Thead><Tr><Th>Client</Th><Th isNumeric>Overdue assets</Th><Th>Oldest due</Th><Th>Outreach</Th></Tr></Thead>
+                    <Tbody>
+                      {rowsShown.map((r) => (
+                        <Tr key={r.cust._id} cursor="pointer" _hover={{ bg: 'blackAlpha.100' }} onClick={() => onSelectCustomer(r.cust._id, r.cust.name)}>
+                          <Td maxW="240px" whiteSpace="normal"><Text fontWeight="medium" noOfLines={1}>{r.cust.name}</Text><Text fontSize="xs" color={muted}>{calc.countryOf(r.cust)}</Text></Td>
+                          <Td isNumeric>{r.n}</Td>
+                          <Td whiteSpace="nowrap"><Text color="red.400" fontWeight="semibold">{overdueText(r.oldestDays)}</Text><Text fontSize="xs" color={muted}>{fmtDate(r.oldestDue)}</Text></Td>
+                          <Td>
+                            {r.agent ? (
+                              <Text fontSize="sm" color={muted}>Through {r.agent}</Text>
+                            ) : (
+                              <OutreachSelect key={r.cust._id} hailer={hailer} customer={r.cust} size="xs" onSaved={saved} />
+                            )}
+                          </Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </TableContainer>
+              )}
+              {rowsFiltered.length > 10 && (
                 <Button size="sm" variant="ghost" mt={2} onClick={() => setShowAllOverdue((v) => !v)}>
-                  {showAllOverdue ? 'Show fewer' : `Show all ${calc.overdue.length}`}
+                  {showAllOverdue ? 'Show fewer' : `Show all ${rowsFiltered.length}`}
                 </Button>
               )}
             </>
           )}
         </Box>
       </Flex>
+
+      {calc.wants.length > 0 && (
+        <Box bg={cardBg} border="1px" borderColor="green.300" borderRadius="md" p={4} mb={6}>
+          <Heading fontSize="md" mb={1}>Want a calibration <Text as="span" fontWeight="normal" color={muted} fontSize="sm">({calc.wants.length})</Text></Heading>
+          <Text fontSize="xs" color={muted} mb={3}>Clients that said yes when contacted. These are for sales to follow up. Click one to open it.</Text>
+          {[...calc.wants].sort((a, b) => outreachDateOf(b) - outreachDateOf(a)).map((c) => (
+            <Flex key={c._id} py={1.5} px={2} borderBottom="1px" borderColor={borderColor} cursor="pointer" _hover={{ bg: 'blackAlpha.100' }} justify="space-between" onClick={() => onSelectCustomer(c._id, c.name)}>
+              <Text fontSize="sm" fontWeight="medium" noOfLines={1}>{c.name} <Text as="span" color={muted} fontWeight="normal">{calc.countryOf(c)}</Text></Text>
+              <Text fontSize="xs" color={muted} whiteSpace="nowrap">{outreachDateOf(c) > 0 ? fmtDate(outreachDateOf(c)) : ''}</Text>
+            </Flex>
+          ))}
+        </Box>
+      )}
 
       {calc.agents.length > 0 && (
         <Box bg={cardBg} border="1px" borderColor={borderColor} borderRadius="md" p={4} mb={6}>

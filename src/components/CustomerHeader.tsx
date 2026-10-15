@@ -19,6 +19,7 @@ import { ComponentType, useEffect, useState } from 'react';
 import { Customers_FieldIds } from '../../../../workspace/enums';
 import { formatMoney } from '../hailer/api-helpers';
 import { useApp } from '../hailer/use-app';
+import OutreachSelect from './OutreachSelect';
 import {
   AwardIcon,
   BuildingIcon,
@@ -65,6 +66,7 @@ export default function CustomerHeader({ hailer, customerId, refreshKey }: Props
   const tileBorder = useColorModeValue('gray.200', 'gray.600');
   const mutedText = useColorModeValue('gray.500', 'gray.400');
   const mapBg = useColorModeValue('gray.100', 'gray.800');
+  const outreachBg = useColorModeValue('gray.50', 'gray.800');
 
   useEffect(() => {
     let cancelled = false;
@@ -231,6 +233,15 @@ export default function CustomerHeader({ hailer, customerId, refreshKey }: Props
               Discussion
             </Button>
           </HStack>
+
+          {clientStatus !== 'Prospect' && !agentName && (
+            <Box mb={stats.length > 0 ? 4 : 0} onClick={(e) => e.stopPropagation()}>
+              <Text fontSize="2xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" mb={1}>Calibration outreach</Text>
+              <Box display="inline-block" bg={outreachBg} borderRadius="md" p={2}>
+                <OutreachSelect key={customer._id} hailer={hailer} customer={customer} />
+              </Box>
+            </Box>
+          )}
 
           {stats.length > 0 && (
             <Wrap spacing={3}>

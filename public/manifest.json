@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Retired assets now show a gray Retired tag next to their name, a gray accent and a slightly faded card, so you can see it without opening the asset. A retired asset no longer shows Calibration Overdue.",
-  "version": "1.22.0",
+  "versionDescription": "Calibration outreach per client: a status dropdown (Not contacted, Contacted waiting, Wants a calibration, Doesn't need one now, Can't reach them) on the customer header and in the Overview, with the last-contacted date set automatically. The Overview overdue list is now one row per client, with a Clients to call filter, an outreach tile, and a Want a calibration list. Clients that buy through an agent show the agent instead.",
+  "version": "1.23.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
