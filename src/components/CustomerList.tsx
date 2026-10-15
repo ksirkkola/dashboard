@@ -46,6 +46,17 @@ export default function CustomerList({ hailer, selectedId, onSelect, onOverview,
     return typeof v === 'string' ? v : '';
   };
 
+  // An agent is any customer that other customers name as their Agent.
+  const agentIds = useMemo(() => {
+    const s = new Set<string>();
+    customers.forEach((c) => {
+      const v = c.fields?.[Customers_FieldIds.agent_e39] as { _id?: string } | { _id?: string }[] | undefined;
+      const id = Array.isArray(v) ? v[0]?._id : v?._id;
+      if (id) s.add(id);
+    });
+    return s;
+  }, [customers]);
+  const isAgent = (c: Activity) => agentIds.has(c._id);
   const isProspect = (c: Activity) => c.fields?.[Customers_FieldIds.client_status_7d2] === 'Prospect';
 
   const filtered = useMemo(() => {
@@ -89,6 +100,7 @@ export default function CustomerList({ hailer, selectedId, onSelect, onOverview,
               <HStack spacing={2} align="center">
                 <Text fontSize="sm" fontWeight={c._id === selectedId ? 'semibold' : 'medium'} noOfLines={1}>{c.name}</Text>
                 {isProspect(c) && <Badge colorScheme="orange" variant="subtle" fontSize="2xs" flexShrink={0}>Prospect</Badge>}
+                {isAgent(c) && <Badge colorScheme="purple" variant="subtle" fontSize="2xs" flexShrink={0}>Agent</Badge>}
               </HStack>
               <Text fontSize="xs" color={mutedText} noOfLines={1}>{countryOf(c) || '—'}</Text>
             </Box>
@@ -97,7 +109,7 @@ export default function CustomerList({ hailer, selectedId, onSelect, onOverview,
       </VStack>
       <Text fontSize="xs" color={mutedText} mt={2}>
         {filtered.length} of {customers.length} customer{customers.length === 1 ? '' : 's'}
-        {customers.some(isProspect) ? ` (${customers.filter(isProspect).length} prospects)` : ''}
+        {customers.some(isProspect) ? ` (${customers.filter(isProspect).length} prospects` : ''}{agentIds.size > 0 ? `${customers.some(isProspect) ? ', ' : ' ('}${agentIds.size} agent${agentIds.size === 1 ? '' : 's'})` : customers.some(isProspect) ? ')' : ''}
       </Text>
     </Box>
   );

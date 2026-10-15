@@ -125,11 +125,20 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
     const openOpps = data.opps.filter((o) => o.currentPhase !== Opportunity_PhaseIds.closed_won_dc0 && o.currentPhase !== Opportunity_PhaseIds.closed_lost_0ee).length;
     const totalWon = visible.reduce((t, c) => t + num(c, Customers_FieldIds.total_won_898), 0);
     const withAssets = new Set(assets.map((a) => linkId(a.fields?.[Assets_FieldIds.company_340])));
-    const noAssets = active.filter((c) => !withAssets.has(c._id)).length;
+    // Agents: customers that other customers name as their Agent. They sell on our behalf and hold no equipment.
+    const agentOf = (c: Activity) => linkId(c.fields?.[Customers_FieldIds.agent_e39]);
+    const agentClients = new Map<string, number>();
+    visible.forEach((c) => { const id = agentOf(c); if (id) agentClients.set(id, (agentClients.get(id) ?? 0) + 1); });
+    const agents = [...agentClients.entries()]
+      .map(([id, n]) => ({ id, n, name: byId.get(id)?.name ?? data.customers.find((c) => c._id === id)?.name ?? 'Unknown' }))
+      .sort((x, y) => y.n - x.n);
+    const agentIds = new Set(agentClients.keys());
+    const unlinkedAgentClients = visible.filter((c) => str(c, Customers_FieldIds.is_this_an_agent_client_0eb) === 'Yes' && !agentOf(c) && !agentIds.has(c._id)).length;
+    const noAssets = active.filter((c) => !agentIds.has(c._id) && !withAssets.has(c._id)).length;
 
     return {
       visible, active, prospects, byCountry, countries, countryOf, assets, families, overdue, dueSoon, noDue, iso, buckets,
-      customersOverdue, openTickets, openOpps, totalWon, noAssets, now,
+      customersOverdue, openTickets, openOpps, totalWon, noAssets, agents, unlinkedAgentClients, now,
     };
   }, [data]);
 
@@ -157,7 +166,7 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
       </Text>
 
       <SimpleGrid columns={{ base: 2, md: 3, xl: 5 }} spacing={3} mb={6}>
-        <StatTile label="Clients" value={calc.active.length} accent="blue" hint="active customers" />
+        <StatTile label="Clients" value={calc.active.length} accent="blue" hint={calc.agents.length > 0 ? `${calc.agents.length} agent${calc.agents.length === 1 ? '' : 's'} included` : 'active customers'} />
         <StatTile label="Prospects" value={calc.prospects.length} accent="orange" valueColor="orange.400" hint={`${calc.prospects.length + calc.active.length} incl. clients`} />
         <StatTile label="Countries" value={calc.countries.filter(([k]) => k !== 'Unknown').length} accent="cyan" />
         <StatTile label="Assets in service" value={calc.assets.length} accent="purple" hint={`${calc.iso} ISO 17025`} />
@@ -186,7 +195,10 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
               {inCountry.map((c) => (
                 <Flex key={c._id} py={1.5} px={2} borderBottom="1px" borderColor={borderColor} cursor="pointer" _hover={{ bg: 'blackAlpha.100' }} justify="space-between" onClick={() => onSelectCustomer(c._id, c.name)}>
                   <Text fontSize="sm" noOfLines={1}>{c.name}</Text>
-                  {str(c, Customers_FieldIds.client_status_7d2) === 'Prospect' && <Badge colorScheme="orange" variant="subtle" fontSize="2xs">Prospect</Badge>}
+                  <HStack spacing={1}>
+                    {str(c, Customers_FieldIds.client_status_7d2) === 'Prospect' && <Badge colorScheme="orange" variant="subtle" fontSize="2xs">Prospect</Badge>}
+                    {calc.agents.some((g) => g.id === c._id) && <Badge colorScheme="purple" variant="subtle" fontSize="2xs">Agent</Badge>}
+                  </HStack>
                 </Flex>
               ))}
             </Box>
@@ -263,8 +275,24 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
         </Box>
       </Flex>
 
+      {calc.agents.length > 0 && (
+        <Box bg={cardBg} border="1px" borderColor={borderColor} borderRadius="md" p={4} mb={6}>
+          <Heading fontSize="md" mb={1}>Clients through agents</Heading>
+          <Text fontSize="xs" color={muted} mb={3}>Customers whose Agent field points to an agent. Click an agent to open it.</Text>
+          {calc.agents.map((g) => (
+            <Flex key={g.id} py={1.5} px={2} borderBottom="1px" borderColor={borderColor} cursor="pointer" _hover={{ bg: 'blackAlpha.100' }} justify="space-between" onClick={() => onSelectCustomer(g.id, g.name)}>
+              <HStack><Text fontSize="sm" fontWeight="medium">{g.name}</Text><Badge colorScheme="purple" variant="subtle" fontSize="2xs">Agent</Badge></HStack>
+              <Text fontSize="sm" fontWeight="semibold">{g.n} client{g.n === 1 ? '' : 's'}</Text>
+            </Flex>
+          ))}
+          {calc.unlinkedAgentClients > 0 && (
+            <Text fontSize="xs" color="orange.400" mt={3}>{calc.unlinkedAgentClients} customer{calc.unlinkedAgentClients === 1 ? ' is' : 's are'} marked as an agent client but {calc.unlinkedAgentClients === 1 ? 'has' : 'have'} no agent linked yet.</Text>
+          )}
+        </Box>
+      )}
+
       <Text fontSize="xs" color={muted}>
-        {calc.noAssets > 0 ? `${calc.noAssets} active customer${calc.noAssets === 1 ? ' has' : 's have'} no assets on record. ` : ''}Total won is the sum of Total Won on the customer records.
+        {calc.noAssets > 0 ? `${calc.noAssets} active customer${calc.noAssets === 1 ? ' has' : 's have'} no assets on record. ` : ''}Agents are not counted there. Total won is the sum of Total Won on the customer records.
       </Text>
     </Box>
   );

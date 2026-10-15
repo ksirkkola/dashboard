@@ -92,6 +92,8 @@ export default function CustomerHeader({ hailer, customerId, refreshKey }: Props
   const city = f[Customers_FieldIds.company_city_897] as string | undefined;
   const country = f[Customers_FieldIds.company_country_9a0] as string | undefined;
   const clientStatus = f[Customers_FieldIds.client_status_7d2] as string | undefined;
+  const agentLink = f[Customers_FieldIds.agent_e39] as { name?: string } | { name?: string }[] | undefined;
+  const agentName = (Array.isArray(agentLink) ? agentLink[0]?.name : agentLink?.name) || undefined;
   const industry = f[Customers_FieldIds.industry_2af] as string | undefined;
   const accountType = f[Customers_FieldIds.is_this_an_agent_client_0eb] as string | undefined;
   const isoLab = f[Customers_FieldIds.iso_17025_lab_a29] as string | undefined;
@@ -124,6 +126,7 @@ export default function CustomerHeader({ hailer, customerId, refreshKey }: Props
   if (vat) stats.push({ label: 'VAT', value: vat, icon: BuildingIcon, color: 'blue.400' });
   if (paymentTerms)
     stats.push({ label: 'Payment Terms', value: paymentTerms, icon: CreditCardIcon, color: 'pink.400' });
+  if (agentName) stats.push({ label: 'Buys through agent', value: agentName, icon: AwardIcon, color: 'purple.400' });
   if (accountType && accountType !== 'No')
     stats.push({ label: 'Agent Account', value: accountType, icon: AwardIcon, color: 'yellow.500' });
   if (isoLab && isoLab !== 'No')
