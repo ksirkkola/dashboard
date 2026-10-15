@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Overview: removed a note that wrongly suggested old calibration due dates might be out of date.",
+  "versionDescription": "Removed the Agent tag added in 1.20.0: the Is this an Agent client field marks clients that buy through an agent, not agents themselves, so it tagged the wrong customers.",
   "version": "1.19.2",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
