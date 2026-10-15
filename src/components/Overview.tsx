@@ -132,7 +132,10 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
     const agentClients = new Map<string, number>();
     visible.forEach((c) => { const id = agentOf(c); if (id) agentClients.set(id, (agentClients.get(id) ?? 0) + 1); });
     const agents = [...agentClients.entries()]
-      .map(([id, n]) => ({ id, n, name: byId.get(id)?.name ?? data.customers.find((c) => c._id === id)?.name ?? 'Unknown' }))
+      .map(([id, n]) => ({
+        id, n, name: byId.get(id)?.name ?? data.customers.find((c) => c._id === id)?.name ?? 'Unknown',
+        clients: visible.filter((c) => agentOf(c) === id).sort((x, y) => x.name.localeCompare(y.name)),
+      }))
       .sort((x, y) => y.n - x.n);
     const agentIds = new Set(agentClients.keys());
     const unlinkedAgentClients = visible.filter((c) => str(c, Customers_FieldIds.is_this_an_agent_client_0eb) === 'Yes' && !agentOf(c) && !agentIds.has(c._id)).length;
@@ -337,12 +340,21 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
       {calc.agents.length > 0 && (
         <Box bg={cardBg} border="1px" borderColor={borderColor} borderRadius="md" p={4} mb={6}>
           <Heading fontSize="md" mb={1}>Clients through agents</Heading>
-          <Text fontSize="xs" color={muted} mb={3}>Customers whose Agent field points to an agent. Click an agent to open it.</Text>
+          <Text fontSize="xs" color={muted} mb={3}>The clients that buy through each agent. Click a name to open it.</Text>
           {calc.agents.map((g) => (
-            <Flex key={g.id} py={1.5} px={2} borderBottom="1px" borderColor={borderColor} cursor="pointer" _hover={{ bg: 'blackAlpha.100' }} justify="space-between" onClick={() => onSelectCustomer(g.id, g.name)}>
-              <HStack><Text fontSize="sm" fontWeight="medium">{g.name}</Text><Badge colorScheme="purple" variant="subtle" fontSize="2xs">Agent</Badge></HStack>
-              <Text fontSize="sm" fontWeight="semibold">{g.n} client{g.n === 1 ? '' : 's'}</Text>
-            </Flex>
+            <Box key={g.id} mb={4}>
+              <Flex py={1.5} px={2} borderBottom="1px" borderColor={borderColor} cursor="pointer" _hover={{ bg: 'blackAlpha.100' }} justify="space-between" onClick={() => onSelectCustomer(g.id, g.name)}>
+                <HStack><Text fontSize="sm" fontWeight="semibold">{g.name}</Text><Badge colorScheme="purple" variant="subtle" fontSize="2xs">Agent</Badge></HStack>
+                <Text fontSize="sm" fontWeight="semibold">{g.n} client{g.n === 1 ? '' : 's'}</Text>
+              </Flex>
+              <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacingX={4} px={2} pt={2}>
+                {g.clients.map((c) => (
+                  <Text key={c._id} fontSize="sm" py={0.5} noOfLines={1} cursor="pointer" _hover={{ textDecoration: 'underline' }} onClick={() => onSelectCustomer(c._id, c.name)}>
+                    {c.name.trim()} <Text as="span" fontSize="xs" color={muted}>{calc.countryOf(c)}</Text>
+                  </Text>
+                ))}
+              </SimpleGrid>
+            </Box>
           ))}
           {calc.unlinkedAgentClients > 0 && (
             <Text fontSize="xs" color="orange.400" mt={3}>{calc.unlinkedAgentClients} customer{calc.unlinkedAgentClients === 1 ? ' is' : 's are'} marked as an agent client but {calc.unlinkedAgentClients === 1 ? 'has' : 'have'} no agent linked yet.</Text>

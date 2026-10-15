@@ -163,7 +163,7 @@ export default function App() {
         <Box flex="1" minW={0} w="100%">
       {customerId ? (
         <>
-          <CustomerHeader hailer={hailer} customerId={customerId} refreshKey={refreshKey} />
+          <CustomerHeader hailer={hailer} customerId={customerId} refreshKey={refreshKey} onSelectCustomer={(id) => setCustomerId(id)} />
           <Tabs variant="soft-rounded" colorScheme="blue" isLazy>
             <TabList overflowX="auto" overflowY="hidden" sx={{ scrollbarWidth: 'none' }} pb={2}>
               <Tab><TabLabel label="Assets" count={assetCount} icon={CubeIcon} /></Tab>

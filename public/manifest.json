@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Retired assets are hidden from the Assets tab and its count. Their records are untouched; set the status back to Active to show one again.",
-  "version": "1.24.0",
+  "versionDescription": "Agents now show their clients: the agent's customer page lists the clients that buy through it (click one to open it), and the Overview card Clients through agents lists the client names under each agent.",
+  "version": "1.25.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
