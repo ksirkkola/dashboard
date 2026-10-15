@@ -131,10 +131,12 @@ export default function Overview({ hailer, refreshKey, onSelectCustomer }: Props
     const agentClients = new Map<string, number>();
     visible.forEach((c) => { const id = agentOf(c); if (id) agentClients.set(id, (agentClients.get(id) ?? 0) + 1); });
     const agents = [...agentClients.entries()]
-      .map(([id, n]) => ({
-        id, n, name: byId.get(id)?.name ?? data.customers.find((c) => c._id === id)?.name ?? 'Unknown',
-        clients: visible.filter((c) => agentOf(c) === id).sort((x, y) => x.name.localeCompare(y.name)),
+      .map(([id]) => ({
+        id, name: byId.get(id)?.name ?? data.customers.find((c) => c._id === id)?.name ?? 'Unknown',
+        // Prospects are not listed or counted here; they are not clients yet.
+        clients: active.filter((c) => agentOf(c) === id).sort((x, y) => x.name.localeCompare(y.name)),
       }))
+      .map((g) => ({ ...g, n: g.clients.length }))
       .sort((x, y) => y.n - x.n);
     const agentIds = new Set(agentClients.keys());
     const unlinkedAgentClients = visible.filter((c) => str(c, Customers_FieldIds.is_this_an_agent_client_0eb) === 'Yes' && !agentOf(c) && !agentIds.has(c._id)).length;

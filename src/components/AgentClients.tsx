@@ -1,6 +1,6 @@
 import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
 import {
-  Badge, Center, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useColorModeValue,
+  Center, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useColorModeValue,
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import { Assets_FieldIds, Customers_FieldIds } from '../../../../workspace/enums';
@@ -44,7 +44,7 @@ export default function AgentClients({ hailer, agentId, refreshKey, onCount, onS
         if (cancelled) return;
         setCustomers(c);
         setAssets(a);
-        const n = c.filter((x) => linkId(x.fields?.[Customers_FieldIds.agent_e39]) === agentId && str(x, Customers_FieldIds.client_status_7d2) !== 'Inactive').length;
+        const n = c.filter((x) => linkId(x.fields?.[Customers_FieldIds.agent_e39]) === agentId && !['Inactive', 'Prospect'].includes(str(x, Customers_FieldIds.client_status_7d2))).length;
         onCount?.(n);
       } catch (err) {
         if (!cancelled) setError((err as HailerError).msg ?? 'Failed to load the clients');
@@ -58,7 +58,7 @@ export default function AgentClients({ hailer, agentId, refreshKey, onCount, onS
     if (!customers) return [];
     const now = Date.now();
     return customers
-      .filter((c) => linkId(c.fields?.[Customers_FieldIds.agent_e39]) === agentId && str(c, Customers_FieldIds.client_status_7d2) !== 'Inactive')
+      .filter((c) => linkId(c.fields?.[Customers_FieldIds.agent_e39]) === agentId && !['Inactive', 'Prospect'].includes(str(c, Customers_FieldIds.client_status_7d2)))
       .map((c) => {
         const mine = assets.filter((a) => linkId(a.fields?.[Assets_FieldIds.company_340]) === c._id && a.fields?.[Assets_FieldIds.status_9b5] !== 'Retired');
         const dues = mine.map((a) => a.fields?.[Assets_FieldIds.calibration_due_f5e]).filter((d): d is number => typeof d === 'number' && d > 0);
@@ -74,7 +74,7 @@ export default function AgentClients({ hailer, agentId, refreshKey, onCount, onS
 
   return (
     <>
-      <Text fontSize="sm" color={muted} mb={3}>The customers that buy through this agent. Click a client to open it.</Text>
+      <Text fontSize="sm" color={muted} mb={3}>The clients that buy through this agent (prospects are not listed). Click a client to open it.</Text>
       <TableContainer>
         <Table size="sm">
           <Thead><Tr><Th>Client</Th><Th>Country</Th><Th isNumeric>Assets</Th><Th isNumeric>Overdue</Th><Th>Oldest due</Th></Tr></Thead>
@@ -82,8 +82,7 @@ export default function AgentClients({ hailer, agentId, refreshKey, onCount, onS
             {rows.map(({ c, assets: n, overdue, oldest }) => (
               <Tr key={c._id} cursor="pointer" _hover={{ bg: 'blackAlpha.100' }} onClick={() => onSelectCustomer(c._id, c.name)}>
                 <Td fontWeight="medium" maxW="320px" whiteSpace="normal">
-                  {c.name.trim()}{' '}
-                  {str(c, Customers_FieldIds.client_status_7d2) === 'Prospect' && <Badge colorScheme="orange" variant="subtle" fontSize="2xs">Prospect</Badge>}
+                  {c.name.trim()}
                 </Td>
                 <Td>{str(c, Customers_FieldIds.company_country_9a0) || '—'}</Td>
                 <Td isNumeric>{n}</Td>

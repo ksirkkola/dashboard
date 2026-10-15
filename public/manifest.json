@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Overview: removed the Total won card, and the Due in 90 days card now says not overdue yet.",
-  "version": "1.27.0",
+  "versionDescription": "Prospects are no longer listed or counted under agents, on the Overview card or the agent's Clients tab. They appear there once their status changes to Active.",
+  "version": "1.28.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
