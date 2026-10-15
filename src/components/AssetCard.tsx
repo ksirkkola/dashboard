@@ -73,9 +73,13 @@ export default function AssetCard({ hailer, activity, customerId, imageFileId }:
   const assetAge = f[Assets_FieldIds.asset_age_d2b] as string | undefined;
 
   const warrantyExpired = warrantyExpiresMs != null && isOverdue(warrantyExpiresMs);
-  const calibrationOverdue = calibrationDueMs != null && isOverdue(calibrationDueMs);
+  // A retired asset is out of service, so its calibration is not "overdue".
+  const retired = f[Assets_FieldIds.status_9b5] === 'Retired';
+  const calibrationOverdue = !retired && calibrationDueMs != null && isOverdue(calibrationDueMs);
 
-  const accent = warrantyExpired
+  const accent = retired
+    ? 'gray.400'
+    : warrantyExpired
     ? 'red.400'
     : calibrationOverdue
       ? 'orange.400'
@@ -111,6 +115,7 @@ export default function AssetCard({ hailer, activity, customerId, imageFileId }:
       onOpen={() => void hailer.ui.activity.open(activity._id)}
       p={0}
       overflow="hidden"
+      opacity={retired ? 0.8 : 1}
     >
       <HStack align="stretch" spacing={0}>
         {imageFileId && (
@@ -127,9 +132,16 @@ export default function AssetCard({ hailer, activity, customerId, imageFileId }:
           </Box>
         )}
         <Box flex="1" minW={0} p={3}>
-          <Heading fontSize="md" noOfLines={1}>
-            {assetName ?? activity.name ?? '—'}
-          </Heading>
+          <HStack spacing={2} align="center">
+            <Heading fontSize="md" noOfLines={1}>
+              {assetName ?? activity.name ?? '—'}
+            </Heading>
+            {retired && (
+              <Badge colorScheme="gray" variant="solid" fontSize="xs" flexShrink={0} title="This asset is retired (out of service)">
+                Retired
+              </Badge>
+            )}
+          </HStack>
           {(productFamily || productName) && (
             <Text fontSize="xs" color="subtleText" mt={0.5} noOfLines={2}>
               {[productFamily, productName].filter(Boolean).join(' · ')}
