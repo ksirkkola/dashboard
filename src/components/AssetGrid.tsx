@@ -1,5 +1,7 @@
 import { Activity, HailerApi, HailerError } from '@hailer/app-sdk';
-import { SimpleGrid, Spinner, Text, Center } from '@chakra-ui/react';
+import {
+  Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Badge, Box, Center, SimpleGrid, Spinner, Text, useColorModeValue,
+} from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import AssetCard from './AssetCard';
 import EmptyState from './EmptyState';
@@ -17,6 +19,7 @@ interface Props {
 
 export default function AssetGrid({ hailer, customerId, refreshKey, onCount }: Props) {
   const [assets, setAssets] = useState<Activity[]>([]);
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
   const [imagesByFamily, setImagesByFamily] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,11 +38,10 @@ export default function AssetGrid({ hailer, customerId, refreshKey, onCount }: P
           fetchAllPhases(hailer, WORKFLOWS.assetTypeImages, PHASES.assetTypeImages),
         ]);
         if (cancelled) return;
-        // Retired assets (out of service) are not shown. Their records are untouched.
-        const mine = filterByLink(all, Assets_FieldIds.company_340, customerId)
-          .filter((x) => x.fields?.[Assets_FieldIds.status_9b5] !== 'Retired');
+        const mine = filterByLink(all, Assets_FieldIds.company_340, customerId);
         setAssets(mine);
-        onCount?.(mine.length);
+        // The tab count is assets in service; retired ones sit in their own collapsed section.
+        onCount?.(mine.filter((x) => x.fields?.[Assets_FieldIds.status_9b5] !== 'Retired').length);
 
         const map: Record<string, string> = {};
         imageRecords.forEach((r) => {
@@ -63,24 +65,54 @@ export default function AssetGrid({ hailer, customerId, refreshKey, onCount }: P
 
   if (loading) return <Center py={12}><Spinner /></Center>;
   if (error) return <Center py={12}><Text color="red.500">{error}</Text></Center>;
+  const isRetired = (a: Activity) => a.fields?.[Assets_FieldIds.status_9b5] === 'Retired';
+  const inService = assets.filter((a) => !isRetired(a));
+  const retired = assets.filter(isRetired);
+
   if (assets.length === 0)
     return <EmptyState icon={CubeIcon} text="No assets on file for this customer." />;
 
+  const renderCard = (a: Activity) => {
+    const family = a.fields?.[Assets_FieldIds.product_family_23a] as string | undefined;
+    const imageFileId = family ? imagesByFamily[family] : undefined;
+    return (
+      <AssetCard
+        key={a._id}
+        hailer={hailer}
+        activity={a}
+        customerId={customerId}
+        imageFileId={imageFileId}
+      />
+    );
+  };
+
   return (
-    <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>
-      {assets.map((a) => {
-        const family = a.fields?.[Assets_FieldIds.product_family_23a] as string | undefined;
-        const imageFileId = family ? imagesByFamily[family] : undefined;
-        return (
-          <AssetCard
-            key={a._id}
-            hailer={hailer}
-            activity={a}
-            customerId={customerId}
-            imageFileId={imageFileId}
-          />
-        );
-      })}
-    </SimpleGrid>
+    <>
+      {inService.length > 0 ? (
+        <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>
+          {inService.map(renderCard)}
+        </SimpleGrid>
+      ) : (
+        <EmptyState icon={CubeIcon} text="No assets in service for this customer." />
+      )}
+
+      {retired.length > 0 && (
+        <Accordion allowToggle mt={6}>
+          <AccordionItem border="1px" borderRadius="md" borderColor={borderColor}>
+            <AccordionButton>
+              <Box flex="1" textAlign="left" fontWeight="semibold">
+                Retired <Badge ml={2} colorScheme="gray" variant="solid">{retired.length}</Badge>
+              </Box>
+              <AccordionIcon />
+            </AccordionButton>
+            <AccordionPanel pb={4}>
+              <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>
+                {retired.map(renderCard)}
+              </SimpleGrid>
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
+      )}
+    </>
   );
 }

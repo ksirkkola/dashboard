@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Prospects are no longer listed or counted under agents, on the Overview card or the agent's Clients tab. They appear there once their status changes to Active.",
-  "version": "1.28.0",
+  "versionDescription": "Retired assets are no longer hidden: they sit in a collapsed Retired section below the assets in service, still tagged Retired. The Assets tab count only counts assets in service.",
+  "version": "1.29.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
