@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Retired assets are no longer hidden: they sit in a collapsed Retired section below the assets in service, still tagged Retired. The Assets tab count only counts assets in service.",
-  "version": "1.29.0",
+  "versionDescription": "Customer page: an Outreach history link under the calibration outreach dropdown lists each status change with date, time and who made it, including automatic resets after a calibration.",
+  "version": "1.30.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }

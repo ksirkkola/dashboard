@@ -20,6 +20,7 @@ import { Customers_FieldIds } from '../../../../workspace/enums';
 import { formatMoney } from '../hailer/api-helpers';
 import { useApp } from '../hailer/use-app';
 import OutreachSelect from './OutreachSelect';
+import OutreachHistory from './OutreachHistory';
 import {
   AwardIcon,
   BuildingIcon,
@@ -240,6 +241,7 @@ export default function CustomerHeader({ hailer, customerId, refreshKey, isAgent
               <Text fontSize="2xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" mb={1}>Calibration outreach</Text>
               <Box display="inline-block" bg={outreachBg} borderRadius="md" p={2}>
                 <OutreachSelect key={customer._id} hailer={hailer} customer={customer} />
+                <OutreachHistory key={`h-${customer._id}`} hailer={hailer} customer={customer} />
               </Box>
             </Box>
           )}
