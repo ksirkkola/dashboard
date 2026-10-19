@@ -170,7 +170,7 @@ export default function App() {
         <Box flex="1" minW={0} w="100%">
       {customerId ? (
         <>
-          <CustomerHeader hailer={hailer} customerId={customerId} refreshKey={refreshKey} isAgent={isAgent} />
+          <CustomerHeader hailer={hailer} customerId={customerId} refreshKey={refreshKey} isAgent={isAgent} onTripCreated={() => setRefreshKey((k) => k + 1)} />
           {isAgent ? (
           <Tabs key="agent" variant="soft-rounded" colorScheme="blue" isLazy>
             <TabList overflowX="auto" overflowY="hidden" sx={{ scrollbarWidth: 'none' }} pb={2}>

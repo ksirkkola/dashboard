@@ -21,6 +21,7 @@ import { formatMoney } from '../hailer/api-helpers';
 import { useApp } from '../hailer/use-app';
 import OutreachSelect from './OutreachSelect';
 import OutreachHistory from './OutreachHistory';
+import NewTripModal from './NewTripModal';
 import {
   AwardIcon,
   BuildingIcon,
@@ -47,6 +48,7 @@ interface Props {
   customerId: string;
   refreshKey?: number;
   isAgent?: boolean;
+  onTripCreated?: () => void;
 }
 
 interface Stat {
@@ -56,11 +58,12 @@ interface Stat {
   color: string;
 }
 
-export default function CustomerHeader({ hailer, customerId, refreshKey, isAgent }: Props) {
+export default function CustomerHeader({ hailer, customerId, refreshKey, isAgent, onTripCreated }: Props) {
   const { user } = useApp();
   const [customer, setCustomer] = useState<Activity | null>(null);
   const [loading, setLoading] = useState(true);
   const [logoError, setLogoError] = useState(false);
+  const [tripOpen, setTripOpen] = useState(false);
 
   const cardBg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -236,15 +239,31 @@ export default function CustomerHeader({ hailer, customerId, refreshKey, isAgent
             </Button>
           </HStack>
 
-          {clientStatus !== 'Prospect' && !agentName && !isAgent && (
-            <Box mb={stats.length > 0 ? 4 : 0} onClick={(e) => e.stopPropagation()}>
-              <Text fontSize="2xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" mb={1}>Calibration outreach</Text>
-              <Box display="inline-block" bg={outreachBg} borderRadius="md" p={2}>
-                <OutreachSelect key={customer._id} hailer={hailer} customer={customer} />
-                <OutreachHistory key={`h-${customer._id}`} hailer={hailer} customer={customer} />
-              </Box>
-            </Box>
+          {!isAgent && (
+            <Flex align="flex-end" gap={4} wrap="wrap" mb={stats.length > 0 ? 4 : 0} onClick={(e) => e.stopPropagation()}>
+              {clientStatus !== 'Prospect' && !agentName && (
+                <Box>
+                  <Text fontSize="2xs" color={mutedText} textTransform="uppercase" letterSpacing="wider" mb={1}>Calibration outreach</Text>
+                  <Box display="inline-block" bg={outreachBg} borderRadius="md" p={2}>
+                    <OutreachSelect
+                      key={customer._id} hailer={hailer} customer={customer}
+                      onSaved={(_id, status, ms) => setCustomer((c) => c && ({ ...c, fields: { ...c.fields, [Customers_FieldIds.calibration_outreach_dfa]: status, [Customers_FieldIds.calibration_outreach_last_contacted_dfe]: ms } }))}
+                    />
+                    <OutreachHistory key={`h-${customer._id}`} hailer={hailer} customer={customer} />
+                  </Box>
+                </Box>
+              )}
+              <Button
+                size="sm"
+                colorScheme={f[Customers_FieldIds.calibration_outreach_dfa] === 'Wants a calibration' ? 'green' : 'blue'}
+                variant={f[Customers_FieldIds.calibration_outreach_dfa] === 'Wants a calibration' ? 'solid' : 'outline'}
+                onClick={() => setTripOpen(true)}
+              >
+                + Trip
+              </Button>
+            </Flex>
           )}
+          <NewTripModal hailer={hailer} customer={customer} isOpen={tripOpen} onClose={() => setTripOpen(false)} onCreated={onTripCreated} />
 
           {stats.length > 0 && (
             <Wrap spacing={3}>

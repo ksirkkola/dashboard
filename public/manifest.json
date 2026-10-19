@@ -11,7 +11,7 @@
     }
   },
   "description": "Customer dashboard — assets, support tickets, contacts, opportunities, ManikinPC, rentals, online orders, and trips/IHS visits, all in one place for any client.",
-  "versionDescription": "Customer page: an Outreach history link under the calibration outreach dropdown lists each status change with date, time and who made it, including automatic resets after a calibration.",
-  "version": "1.30.0",
+  "versionDescription": "New + Trip button in the customer header, next to Calibration outreach: pick the type of visit and which assets (one trip can cover several, with Select overdue and Select all), then Hailer's trip form opens in Triage with the customer, type and assets filled in. The button turns green when the client has said Wants a calibration.",
+  "version": "1.31.0",
   "appId": "6a147675cfcc9eb20cb6297e"
 }
